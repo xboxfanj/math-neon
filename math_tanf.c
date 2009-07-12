@@ -15,7 +15,6 @@ const float __tanf_lut[4] = {
 	+0.99999661f,	//p1
 };
  
- 
 float tanf_c(float x){
 
 	union {
