@@ -1,5 +1,5 @@
 /*
-math-neon:  ARM Neon VFP Optimised Math Library based on cmath
+Math-NEON:  Neon Optimised Math Library based on cmath
 Contact:    lachlan.ts@gmail.com
 Copyright (C) 2009  Lachlan Tychsen - Smith aka Adventus
 
