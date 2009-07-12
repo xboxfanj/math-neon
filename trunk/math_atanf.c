@@ -40,7 +40,7 @@ float atanf_c(float x){
 		int i;
 	} xinv, ax;
 
-	//branch on ARM:
+	//branch on ARM (abs(x) < 1.0):
 	ax.f = x;
 	ax.i = ax.i & (~0x80000000);
 	if (ax.i < 0x3F800000) goto label1;

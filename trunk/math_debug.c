@@ -29,12 +29,12 @@ int main(int argc, char** argv){
 	double emax = 0;
 	double erms = 0;
 	double xmax = 0;
-	for(x = -M_PI; x < M_PI;x += 0.001){
+	for(x = -10; x < 10;x += 0.1){
 		
-		double r = sinf_c((float)x);
-		double rr = sinf((float)x);
+		double r = expf_c((float)x);
+		double rr = expf((float)x);
 		
-		double e = fabsf(r - rr);
+		double e = (100 * fabsf(r - rr)) / rr;
 		//if (fabs(rr) > 1E-4){
 			if (e>emax) {
 				emax = e;
@@ -43,10 +43,10 @@ int main(int argc, char** argv){
 			n++;
 			erms += e * e;
 		//}
-		printf("x=%f \t r=%f \t rr=%f \t e=%f \n", x, r, rr, e);
+		//printf("x=%f \t r=%f \t rr=%f \t e=%f \n", x, r, rr, e);
 	}
 
-	printf("\n", emax, xmax);
+	printf("\n");
 	printf("Max Error %f at x = %f \n", emax, xmax);
 	printf("RMS Error %f \n", sqrt(erms / n));
 	return 0;

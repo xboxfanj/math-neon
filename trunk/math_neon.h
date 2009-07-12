@@ -16,24 +16,19 @@ float 	logf_c(float x);
 float 	powf_c(float x, float n);
 float 	atanf_c(float x);
 
-
 float 	sinf_neon(float x);
 float 	cosf_neon(float x);
 float 	tanf_neon(float x);
-
 
 void	sinfv_c(float *x, int n);
 void  	sinfv_neon(float *x, int n);
 
 
-
 float 	logf_fast(const float x);
 float 	expf_fast(const float x);
 float 	log2f_fast(const float x);
-double 	expd_fast(const double x);
 float 	powf_fast(const float x, const float y);
 
-float _fabsf(const float x);
 float _floorf(const float x);
 float _fmodf(const float x);
 float _frexpf(const float x);

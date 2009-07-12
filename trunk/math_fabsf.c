@@ -19,45 +19,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "math.h"
-#include <stdio.h>
+#include "math_neon.h"
 
-const float __log2f_A = 1.0f / 8388608.0f;
-const float __log2f_B = 127.0f;
-
-float log2f_fast(const float x){
 	
+float fabsf_c(float x)
+{
 	union {
-		float f;
 		int i;
-	} sx;
-	
-	sx.f = fabsf(x);	
-	sx.f = ((float) sx.i) * __log2f_A - __log2f_B;
-	
-	return sx.f;
-}
-
-const float __logf_A = 0.69314718055f;
-
-float logf_fast(const float x){
-	return log2f_fast(x) * __logf_A;
-}
-
-const float __expf_A = 8388608 / M_LN2;
-const float __expf_B = 1065353216 - 366393;
-
-float expf_fast(const float x){
-
-	union {
 		float f;
-		int i;
-	} sx;
+	} xx;
 
-	sx.f = x;
-	sx.i = (__expf_A * x + __expf_B);
-	return sx.f;
+	xx.f = x;
+	xx.i = xx.i & 0x7FFFFFFF;
+	return xx.f;
 }
 
-float powf_fast(const float x, const float y){
-	return expf_fast(y * logf_fast(x));
+float fabsf_neon(float x)
+{
+#ifdef __MATH_NEON
+	float r;
+	volatile asm (
+	"bic	 		%0, %1, #80000000		\n\t"	//r = x & ~(1 << 31)
+	:"=r"(r)
+	:"r"(x) 
+	: 
+	);
+	return r;
+#else
+	return fabsf_c(x);
+#endif
 }

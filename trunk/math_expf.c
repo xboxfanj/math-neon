@@ -21,8 +21,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "math.h"
 #include "math_neon.h"
 
-const float __expf_range =  0.693147180f;
-const float __expf_invrange = 1.4426950f;
+const float __expf_rng[2] = {
+	1.442695041f,
+	0.693147180f
+};
+
+//const float __expf_range =  0.693147180f;
+//const float __expf_invrange = 1.4426950f;
 
 const float __expf_lut[4] = {
 	0.1627058233704877f,	//p3
@@ -33,7 +38,7 @@ const float __expf_lut[4] = {
 
 float expf_c(float x)
 {
-	float a, b;
+	float a, b, xx;
 	int m;
 	
 	union {
@@ -42,15 +47,19 @@ float expf_c(float x)
 	} r;
 		
 	//Range Reduction:
-	m = (int) (x * __expf_invrange );
-	x = x - ((float) m) * __expf_range ;
+	m = (int) (x * __expf_rng[0]);
+	x = x - ((float) m) * __expf_rng[1];
 	
 	//Taylor Polynomial (Estrins)
 	a = (__expf_lut[0] * x) + (__expf_lut[2]);
 	b = (__expf_lut[1] * x) + (__expf_lut[3]);
-	x = x * x;
-	r.f = b + a * x;
-	r.i += m << 23;
+	xx = x * x;
+	r.f = b + a * xx;
+	
+	printf("x=%f \t r=%f \t e=%f \t dr=%f \n", x, r.f, expf(x), 100 * (r.f - expf(x)) / expf(x) );
+
+	m = m << 23;
+	r.i = r.i + m;
 
 	return r.f;
 }
