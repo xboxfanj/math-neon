@@ -15,6 +15,7 @@ float 	expf_c(float x);
 float 	logf_c(float x);
 float 	powf_c(float x, float n);
 float 	atanf_c(float x);
+void	sincosf_c(float x, float r[2]);
 
 float 	sinf_neon(float x);
 float 	cosf_neon(float x);
