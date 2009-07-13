@@ -31,19 +31,22 @@ int main(int argc, char** argv){
 	double xmax = 0;
 	for(x = -10; x < 10;x += 0.1){
 		
-		double r = expf_c((float)x);
-		double rr = expf((float)x);
+		float r[2];
+		float rr[2];
 		
-		double e = (100 * fabsf(r - rr)) / rr;
-		//if (fabs(rr) > 1E-4){
-			if (e>emax) {
-				emax = e;
-				xmax = x;
-			}
-			n++;
-			erms += e * e;
-		//}
-		//printf("x=%f \t r=%f \t rr=%f \t e=%f \n", x, r, rr, e);
+		sincosf_c((float)x, r);
+		rr[0] = sinf((float)x);
+		rr[1] = cosf((float)x);
+		
+		
+		double e = (100 * fabsf(r[0] - rr[0])) / rr[0];
+		if (e>emax) {
+			emax = e;
+			xmax = x;
+		}
+		n++;
+		erms += e * e;
+		printf("x=%f \t r=%f \t rr=%f \t e=%f \n", x, r[0], rr[0], e);
 	}
 
 	printf("\n");

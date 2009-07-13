@@ -56,7 +56,7 @@ float expf_c(float x)
 	xx = x * x;
 	r.f = b + a * xx;
 	
-	printf("x=%f \t r=%f \t e=%f \t dr=%f \n", x, r.f, expf(x), 100 * (r.f - expf(x)) / expf(x) );
+	//printf("x=%f \t m=%i \t r=%f \t e=%f \t dr=%f \n", x, m, r.f, expf(x), 100 * (r.f - expf(x)) / expf(x) );
 
 	m = m << 23;
 	r.i = r.i + m;

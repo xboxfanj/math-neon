@@ -21,64 +21,89 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "math.h"
 #include "math_neon.h"
 
-const float __sinf_rng[2] = {
+const float __sincosf_rng[2] = {
 	2.0 / M_PI,
 	M_PI / 2.0
 };
 
-const float __sinf_lut[4] = {
+const float __sincosf_lut[8] = {
 	-0.00018365f,	//p7
-	-0.16664831f,	//p3
+	-0.00018365f,	//p7
 	+0.00830636f,	//p5
+	+0.00830636f,	//p5
+	-0.16664831f,	//p3
+	-0.16664831f,	//p3
+	+0.99999661f,	//p1
 	+0.99999661f,	//p1
 };
 
-float sinf_c(float x)
+void sincosf_c(float x, float r[2])
 {
 	union {
 		float 	f;
 		int 	i;
-	} ax;
+	} ax, bx;
 	
-	float r, a, b, xx;
-	int m, n;
+	float y;
+	float a, b, c, d, xx, yy;
+	int m, n, o, p;
 	
+	y = x + __sincosf_rng[1];
 	ax.f = fabsf(x);
-
+	bx.f = fabsf(y);
+	
 	//Range Reduction:
-	m = (int) (ax.f * __sinf_rng[0]);	
-	ax.f = ax.f - (((float)m) * __sinf_rng[1]);
-
+	m = (int) (ax.f * __sincosf_rng[0]);	
+	o = (int) (bx.f * __sincosf_rng[0]);	
+	ax.f = ax.f - (((float)m) * __sincosf_rng[1]);
+	bx.f = bx.f - (((float)o) * __sincosf_rng[1]);
+	
 	//Test Quadrant
 	n = m & 1;
-	ax.f = ax.f - n * __sinf_rng[1];	
+	p = o & 1;
+	ax.f = ax.f - n * __sincosf_rng[1];	
+	bx.f = bx.f - p * __sincosf_rng[1];	
 	m = m >> 1;
+	o = o >> 1;
 	n = n ^ m;
+	p = p ^ o;
 	m = (x < 0.0);
+	o = (y < 0.0);
 	n = n ^ m;	
+	p = p ^ o;	
 	n = n << 31;
+	p = p << 31;
 	ax.i = ax.i ^ n; 
+	bx.i = bx.i ^ p; 
 
-	//Taylor Polynomial (Estrins)
+	//Taylor Polynomial
 	xx = ax.f * ax.f;	
-	a = (__sinf_lut[0] * ax.f) * xx + (__sinf_lut[2] * ax.f);
-	b = (__sinf_lut[1] * ax.f) * xx + (__sinf_lut[3] * ax.f);
-	xx = xx * xx;
-	r = b + a * xx;
+	yy = bx.f * bx.f;
+	r[0] = __sincosf_lut[0];
+	r[1] = __sincosf_lut[0];
+	r[0] = r[0] * xx + __sincosf_lut[2];
+	r[1] = r[1] * yy + __sincosf_lut[2];
+	r[0] = r[0] * xx + __sincosf_lut[4];
+	r[1] = r[1] * yy + __sincosf_lut[4];
+	r[0] = r[0] * xx + __sincosf_lut[6];
+	r[1] = r[1] * yy + __sincosf_lut[6];
+	r[0] = r[0] * ax.f;
+	r[1] = r[1] * bx.f;
 
-	return r;
 }
 
-float sinf_neon(float x)
+void sincosf_neon(float x, float r[2])
 {
 #ifdef __MATH_NEON
-	float r;
 	volatile asm (
-	"vdup.f32 		d0, %1					\n\t"	//d0 = {x, x}
-	"vabs.f32 		d1, d0					\n\t"	//d1 = {ax, ax}
+	//{x, y} = {x, x + pi/2}
+	"vdup.f32 		d1, %1					\n\t"	//d1 = {x, x}
+	"vld1.32 		d3, [%2]				\n\t"	//d3 = {invrange, range}
+	"vadd.f32 		d0, d1, d3				\n\t"	//d0 = d1 + d3
+	"vmov.f32 		s0, s2					\n\t"	//d0[0] = d1[0]	
+	"vabs.f32 		d1, d0					\n\t"	//d1 = {abs(x), abs(y)}
 	
 	//Range Reduction:
-	"vld1.32 		d3, [%2]				\n\t"	//d3 = {invrange, range}
 	"vmul.f32 		d2, d1, d3[0]			\n\t"	//d2 = d1 * d3[0] 
 	"vcvt.u32.f32 	d2, d2					\n\t"	//d2 = (int) d2
 	"vcvt.f32.u32 	d4, d2					\n\t"	//d4 = (float) d2
@@ -96,23 +121,25 @@ float sinf_neon(float x)
 	"vclt.f32 		d3, d0, #0				\n\t"	//d3 = (d0 < 0.0)
 	"veor.i32 		d4, d4, d3				\n\t"	//d4 = d4 ^ d3	
 	"vshl.i32 		d4, d4, #31				\n\t"	//d4 = d4 << 31
-	"veor.i32 		d1, d1, d4				\n\t"	//d1 = d1 ^ d4
+	"veor.i32 		d0, d1, d4				\n\t"	//d0 = d1 ^ d4
 	
 	//polynomial:
-	"vmul.f32 		d2, d1, d1				\n\t"	//d2 = d1*d1 = {x^2, x^2}	
-	"vld1.32 		{d4, d5}, [%3]			\n\t"	//d4 = {p7, p3}, d5 = {p5, p1}
-	"vmul.f32 		d3, d2, d2				\n\t"	//d3 = d2*d2 = {x^4, x^4}		
-	"vmul.f32 		q0, q2, d1[0]			\n\t"	//q0 = q2 * d1[0] = {p7x, p3x, p5x, p1x}
-	"vmla.f32 		d1, d0, d2[0]			\n\t"	//d1 = d1 + d0*d2 = {p5x + p7x^3, p1x + p3x^3}		
-	"vmla.f32 		d1, d3, d1[0]			\n\t"	//d1 = d1 + d3*d0 = {p5x + p7x^3 + p5x^5 + p7x^7, p1x + p3x^3 + p5x^5 + p7x^7}		
-	"vmov.f32 		%0, s3					\n\t"	//r = s0
+	"vldm 			%3!, {d2, d3}	 		\n\t"	//d2 = {p7, p7}, d3 = {p5, p5}, r3 += 4;
+	"vmul.f32 		d1, d0, d0				\n\t"	//d1 = d0 * d0 = {x^2, y^2}
+	"vldm 			%3!, {d4}				\n\t"	//d4 = {p3, p3}, r3 += 2;
+	"vmla.f32 		d3, d2, d1				\n\t"	//d3 = d3 + d2 * d1;	
+	"vldm	 		%3!, {d5}				\n\t"	//d5 = {p1, p1}, r3 += 2;
+	"vmla.f32 		d4, d3, d1				\n\t"	//d4 = d4 + d3 * d1;	
+	"vmla.f32 		d5, d4, d1				\n\t"	//d5 = d5 + d4 * d1;	
+	"vmul.f32 		d5, d5, d0				\n\t"	//d5 = d5 * d0;	
+	
+	"vstm.f32 		%0, {d5}				\n\t"	//r[0] = d5[0], r[1]=d5[1];	
 	
 	: "=r"(r)
-	: "r"(x), "r"(__sinf_rng), "r"(__sinf_lut) 
+	: "r"(x), "r"(__sincosf_rng), "r"(__sincosf_lut) 
     : "d0", "d1", "d2", "d3", "d4", "d5"
 	);
-	return r;
 #else
-	return sinf_c(x);
+	sincosf_c(x, r);
 #endif
 }
