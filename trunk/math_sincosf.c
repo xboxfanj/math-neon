@@ -80,13 +80,13 @@ void sincosf_c(float x, float r[2])
 	xx = ax.f * ax.f;	
 	yy = bx.f * bx.f;
 	r[0] = __sincosf_lut[0];
-	r[1] = __sincosf_lut[0];
+	r[1] = __sincosf_lut[1];
 	r[0] = r[0] * xx + __sincosf_lut[2];
-	r[1] = r[1] * yy + __sincosf_lut[2];
+	r[1] = r[1] * yy + __sincosf_lut[3];
 	r[0] = r[0] * xx + __sincosf_lut[4];
-	r[1] = r[1] * yy + __sincosf_lut[4];
+	r[1] = r[1] * yy + __sincosf_lut[5];
 	r[0] = r[0] * xx + __sincosf_lut[6];
-	r[1] = r[1] * yy + __sincosf_lut[6];
+	r[1] = r[1] * yy + __sincosf_lut[7];
 	r[0] = r[0] * ax.f;
 	r[1] = r[1] * bx.f;
 
@@ -95,7 +95,7 @@ void sincosf_c(float x, float r[2])
 void sincosf_neon(float x, float r[2])
 {
 #ifdef __MATH_NEON
-	volatile asm (
+	asm volatile (
 	//{x, y} = {x, x + pi/2}
 	"vdup.f32 		d1, %1					\n\t"	//d1 = {x, x}
 	"vld1.32 		d3, [%2]				\n\t"	//d3 = {invrange, range}

@@ -24,31 +24,35 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main(int argc, char** argv){
 		
-	double x;
+	double x, p;
 	int n = 0;
 	double emax = 0;
 	double erms = 0;
 	double xmax = 0;
-	for(x = -10; x < 10;x += 0.1){
+	
+	for(x = -10; x < 10; x += 0.01){
 		
-		float r[2];
-		float rr[2];
+		float r;
+		float rr;
+		float dr;
+		double e;
 		
-		sincosf_c((float)x, r);
-		rr[0] = sinf((float)x);
-		rr[1] = cosf((float)x);
-		
-		
-		double e = (100 * fabsf(r[0] - rr[0])) / rr[0];
-		if (e>emax) {
-			emax = e;
-			xmax = x;
+		r = sinf_c((float)x);
+		rr = sinf((float)x);
+		dr = fabsf(rr - r);
+		if (fabs(rr) > 0.0){
+			e = (100 * dr) / rr;
+			if (e>emax) {
+				emax = e;
+				xmax = x;
+			}
+				n++;
+			erms += e * e;
+		}else{
+			e = 0;
 		}
-		n++;
-		erms += e * e;
-		printf("x=%f \t r=%f \t rr=%f \t e=%f \n", x, r[0], rr[0], e);
+		//printf("x=%f \t r=%f \t rr=%f \t e=%f \n", x, r, rr, e);
 	}
-
 	printf("\n");
 	printf("Max Error %f at x = %f \n", emax, xmax);
 	printf("RMS Error %f \n", sqrt(erms / n));

@@ -82,14 +82,15 @@ label2:
 float atanf_neon(float x)
 {
 #ifdef __MATH_NEON
-	float r;
+	float 	r;
+	int 	tmp0, tmp1;
 	volatile asm (
 	
 	//Branch 1
-	"bic	 		r4, %1, #80000000		\n\t"	//r4 = x & ~(1 << 31)
-	"vdup.f32 		d0, r4					\n\t"	//d0 = {ax, ax}
-	"mov32	 		r5, #3F800000			\n\t"	//r5 = 0x3f800000
-	"cmp	 		r4, r5					\n\t"	//flags = cmp(r4, r5)
+	"bic	 		%1, %3, #80000000		\n\t"	//tmp0 = x & ~(1 << 31)
+	"vdup.32 		d0, %1					\n\t"	//d0 = {ax, ax}
+	"ldr	 		%2, =0x3F800000			\n\t"	//tmp1 = 0x3f800000
+	"cmp	 		%1, %2					\n\t"	//flags = cmp(tmp0, tmp1)
 	"vmov.f32 		s11, #0.0				\n\t"	//d5[1] = 0
 	"blt	 		1f						\n\t"	//if (lt) goto 1
 
@@ -100,20 +101,20 @@ float atanf_neon(float x)
 	"vrecps.f32		d2, d1, d0				\n\t"	//d2 = 2.0 - d1 * d0; 
 	"vmul.f32		d1, d1, d2				\n\t"	//d1 = d1 * d2; 
 	"vneg.f32		d1, d1					\n\t"	//d1 = -d1; 
-	"vmov.f32		s11, %3					\n\t"	//d5[1] = pi / 2; 	
+	"vmov.f32		s11, %5					\n\t"	//d5[1] = pi / 2; 	
 
 	"1:										\n\t"	//label 1
 	
 	//polynomial:
 	"vmul.f32 		d2, d1, d1				\n\t"	//d2 = d1*d1 = {ax^2, ax^2}	
-	"vld1.32 		{d4, d5}, [%2]			\n\t"	//d4 = {p7, p3}, d5 = {p5, p1}
+	"vld1.32 		{d4, d5}, [%4]			\n\t"	//d4 = {p7, p3}, d5 = {p5, p1}
 	"vmul.f32 		d3, d2, d2				\n\t"	//d3 = d2*d2 = {x^4, x^4}		
 	"vmul.f32 		q0, q2, d1[0]			\n\t"	//q0 = q2 * d1[0] = {p7x, p3x, p5x, p1x}
 	"vmla.f32 		d1, d0, d2[0]			\n\t"	//d1 = d1 + d0*d2 = {p5x + p7x^3, p1x + p3x^3}		
 	"vmla.f32 		d1, d3, d1[0]			\n\t"	//d1 = d1 + d3*d0 = {..., p1x + p3x^3 + p5x^5 + p7x^7}		
 	"vadd.f32 		d1, d1, d5				\n\t"	//d1 = d1 + d5		
 	
-	"cmp	 		%1, #0					\n\t"	//flags = cmp(x, 0)	
+	"cmp	 		%3, #0					\n\t"	//flags = cmp(x, 0)	
 	"bgt	 		2f						\n\t"	//if (gt) goto 2
 	"vneg.f32		d1, d1					\n\t"	//d1 = -d1
 
@@ -121,9 +122,9 @@ float atanf_neon(float x)
 		
 	"vmov.f32 		%0, s3					\n\t"	//r = d1[1]
 	
-	: "=r"(r) 
+	: "=r"(r), "+r"(tmp0), "+r"(tmp1) 
 	: "r"(x), "r"(__atanf_lut),  "r"(__atanf_pi_2) 
-    : "d0", "d1", "d2", "d3", "d4", "d5", "r4", "r5"
+    : "d0", "d1", "d2", "d3", "d4", "d5"
 	);
 
 	return r;
