@@ -83,7 +83,7 @@ float tanf_neon(float x)
 {
 #ifdef __MATH_NEON
 	float r;
-	volatile asm (
+	asm volatile (
 	"vdup.f32 		d0, %1					\n\t"	//d0 = {x, x}
 	"vabs.f32 		d1, d0					\n\t"	//d1 = {ax, ax}
 	
@@ -96,12 +96,14 @@ float tanf_neon(float x)
 	
 	//Checking Quadrant:
 	//ax = ax - (k&1) * M_PI_2
-	"vand.i32 		d2, d2, #0x00000001		\n\t"	//d2 = d2 & 0x1
+	"vmov.i32 		d4, #1					\n\t"	//d4 = 1
+	"vand.i32 		d2, d2, d4				\n\t"	//d2 = d2 & d4
 	"vcvt.f32.u32 	d2, d2					\n\t"	//d2 = (float) d2
-	"vmls.f32 		d1, d2, d3[1]			\n\t"	//d1 = d1 - d4 * d3[1]
+	"vmls.f32 		d1, d2, d3[1]			\n\t"	//d1 = d1 - d2 * d3[1]
 	
 	//ax = ax ^ ( x.i & 0x800000000)
-	"vand.i32 		d0, d0, #0x80000000		\n\t"	//d0 = d0 & 0x80000000
+	"vmov.i32 		d4, #0x80000000			\n\t"	//d4 = 0x80000000
+	"vand.i32 		d0, d0, d4				\n\t"	//d0 = d0 & d4
 	"veor.i32 		d1, d1, d0				\n\t"	//d1 = d1 ^ d0
 	
 	//polynomial:

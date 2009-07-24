@@ -73,7 +73,7 @@ float sinf_neon(float x)
 {
 #ifdef __MATH_NEON
 	float r;
-	volatile asm (
+	asm volatile (
 	"vdup.f32 		d0, %1					\n\t"	//d0 = {x, x}
 	"vabs.f32 		d1, d0					\n\t"	//d1 = {ax, ax}
 	
@@ -86,7 +86,8 @@ float sinf_neon(float x)
 	
 	//Checking Quadrant:
 	//ax = ax - (k&1) * M_PI_2
-	"vand.i32 		d4, d2, #0x00000001		\n\t"	//d4 = d2 & 0x1
+	"vmov.i32	 	d4, #1					\n\t"	//d4 = 1
+	"vand.i32 		d4, d2, d4				\n\t"	//d4 = d2 & d4
 	"vcvt.f32.u32 	d5, d4					\n\t"	//d5 = (float) d4
 	"vmls.f32 		d1, d5, d3[1]			\n\t"	//d1 = d1 - d4 * d3[1]
 

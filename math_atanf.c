@@ -29,7 +29,7 @@ const float __atanf_lut[4] = {
 }; 
  
 const float __atanf_pi_2 = M_PI_2;
-     
+    
 float atanf_c(float x){
 
 	float a, b, r = 0, xx;
@@ -75,6 +75,8 @@ label1:
 
 label2:
 
+
+
 	return r;
 }
 
@@ -83,15 +85,15 @@ float atanf_neon(float x)
 {
 #ifdef __MATH_NEON
 	float 	r;
-	int 	tmp0, tmp1;
-	volatile asm (
+	int volatile tmp0, tmp1;
+	asm volatile (
 	
 	//Branch 1
-	"bic	 		%1, %3, #80000000		\n\t"	//tmp0 = x & ~(1 << 31)
+	"bic	 		%1, %3, #0x80000000		\n\t"	//tmp0 = x & ~(1 << 31)
 	"vdup.32 		d0, %1					\n\t"	//d0 = {ax, ax}
 	"ldr	 		%2, =0x3F800000			\n\t"	//tmp1 = 0x3f800000
 	"cmp	 		%1, %2					\n\t"	//flags = cmp(tmp0, tmp1)
-	"vmov.f32 		s11, #0.0				\n\t"	//d5[1] = 0
+	"vmov.i32		d5, #0.0				\n\t"	//d5[1] = 0
 	"blt	 		1f						\n\t"	//if (lt) goto 1
 
 	//fast reciporical approximation
@@ -122,7 +124,7 @@ float atanf_neon(float x)
 		
 	"vmov.f32 		%0, s3					\n\t"	//r = d1[1]
 	
-	: "=r"(r), "+r"(tmp0), "+r"(tmp1) 
+	: "=r"(r), "+r"(tmp0), "+r"(tmp1)
 	: "r"(x), "r"(__atanf_lut),  "r"(__atanf_pi_2) 
     : "d0", "d1", "d2", "d3", "d4", "d5"
 	);

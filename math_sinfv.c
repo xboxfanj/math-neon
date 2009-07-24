@@ -93,14 +93,12 @@ void sinfv_c(float *x, int num)
 		x[num - 1] = sinf_c(x[num-1]);
 	}
 	
-	
-	return x;
 }
 
 void sinfv_neon(float *x, int n)
 {
 #ifdef __MATH_NEON
-	volatile asm (
+	asm volatile (""
 	);
 	return x;
 #else

@@ -38,11 +38,10 @@ float fabsf_neon(float x)
 {
 #ifdef __MATH_NEON
 	float r;
-	volatile asm (
-	"bic	 		%0, %1, #80000000		\n\t"	//r = x & ~(1 << 31)
+	asm volatile (
+	"bic	 		%0, %1, #0x80000000		\n\t"	//r = x & ~(1 << 31)
 	:"=r"(r)
 	:"r"(x) 
-	: 
 	);
 	return r;
 #else

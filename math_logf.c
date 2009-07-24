@@ -89,7 +89,7 @@ float logf_neon(float x)
 #ifdef __MATH_NEON
 	float 	r;
 	int   	tmp0, tmp1;
-	volatile asm (
+	asm volatile (
 	
 	//extract exponent
 	"ldr			%1, =0x3F800000			\n\t"	//tmp0 = 0x3F800000
@@ -98,7 +98,7 @@ float logf_neon(float x)
 	"vdup.32 		d6, %2					\n\t"	//d6 = {tmp1, tmp1}
 	"ldr			%2, =0x007FFFFF			\n\t"	//tmp1 = 0x007FFFFF
 	"and			%3, %3, %2				\n\t"	//x = x & tmp1
-	"or				%3, %3, %1				\n\t"	//x = x | tmp0
+	"orr			%3, %3, %1				\n\t"	//x = x | tmp0
 	"vdup.32 		d0, %3					\n\t"	//d0 = {x, x}
 
 	//polynomial:
@@ -111,12 +111,12 @@ float logf_neon(float x)
 
 	//add exponent 	
 	"vdup.32 		d7, %4					\n\t"	//d7 = {rng, rng}
-	"vcvt.f32.i32 	d6, d6					\n\t"	//d6 = (float) d6
+	"vcvt.f32.s32 	d6, d6					\n\t"	//d6 = (float) d6
 	"vmla.f32 		d2, d6, d7				\n\t"	//d2 = d2 + d6 * d7		
 
 	"vmov.f32 		%0, s4					\n\t"	//r = s4
 	
-	: "=r"(r), "+r"(tmp0), "+r"(tmp1), "+r"(x),
+	: "=r"(r), "+r"(tmp0), "+r"(tmp1), "+r"(x)
 	: "r"(__logf_rng), "r"(__logf_lut) 
     : "d0", "d1", "q1", "q2", "d6", "d7"
 	);

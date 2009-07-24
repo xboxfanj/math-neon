@@ -93,7 +93,7 @@ float expf_neon(float x)
 {
 #ifdef __MATH_NEON
 	float r;
-	volatile asm (
+	asm volatile (
 	"vdup.32 		d0, %1					\n\t"	//d0 = {x, x}
 	
 	//Range Reduction:
@@ -112,7 +112,7 @@ float expf_neon(float x)
 	"vmla.f32 		d2, d1, d2[1]			\n\t"	//d2 = d2 + d1 * d2[1]		
 
 	//multiply by 2 ^ m 	
-	"vshl.f32 		d6, d6, #23				\n\t"	//d6 = d6 << 23		
+	"vshl.i32 		d6, d6, #23				\n\t"	//d6 = d6 << 23		
 	"vadd.i32 		d2, d2, d6				\n\t"	//d2 = d2 + d6		
 
 	"vmov.f32 		%0, s4					\n\t"	//r = s4

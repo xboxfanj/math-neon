@@ -111,9 +111,10 @@ void sincosf_neon(float x, float r[2])
 	
 	//Checking Quadrant:
 	//ax = ax - (k&1) * M_PI_2
-	"vand.i32 		d4, d2, #0x00000001		\n\t"	//d4 = d2 & 0x1
+	"vmov.i32	 	d4, #1					\n\t"	//d4 = 1
+	"vand.i32	 	d4, d4, d2				\n\t"	//d4 = d4 & d2
 	"vcvt.f32.u32 	d5, d4					\n\t"	//d5 = (float) d4
-	"vmls.f32 		d1, d5, d3[1]			\n\t"	//d1 = d1 - d4 * d3[1]
+	"vmls.f32 		d1, d5, d3[1]			\n\t"	//d1 = d1 - d5 * d3[1]
 
 	//ax = ax ^ ((k & 1) ^ (k >> 1) ^ (x < 0) << 31)
 	"vshr.u32 		d3, d2, #1				\n\t"	//d3 = d2 >> 1
