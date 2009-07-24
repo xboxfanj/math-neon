@@ -8,6 +8,13 @@
 #endif
 
 
+#ifdef GCC
+#define ALIGN(A) __attribute__ ((aligned (A))
+#else
+#define ALIGN(A)
+#endif
+
+
 float 	sinf_c(float x);
 float 	cosf_c(float x);
 float 	tanf_c(float x);

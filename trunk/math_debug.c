@@ -55,6 +55,6 @@ int main(int argc, char** argv){
 	}
 	printf("\n");
 	printf("Max Error %f at x = %f \n", emax, xmax);
-	printf("RMS Error %f \n", sqrt(erms / n));
+	printf("RMS Error %f \n", sqrtf(erms / n));
 	return 0;
 } 

@@ -112,7 +112,7 @@ float powf_neon(float x)
 {
 #ifdef __MATH_NEON
 	float r;
-	volatile asm (
+	asm volatile (""
 	);
 	return r;
 #else
