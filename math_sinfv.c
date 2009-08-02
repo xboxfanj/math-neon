@@ -33,7 +33,7 @@ const float __sinfv_lut[4] = {
 	+0.99999661f,	//p1
 };
 
-void sinfv_c(float *x0, int num)
+void sinfv_c(float *r, float *x, int n)
 {
 	union {
 		float 	f;
@@ -43,20 +43,20 @@ void sinfv_c(float *x0, int num)
 	float aa, ab, ba, bb, axx, bxx;
 	int am, bm, an, bn;
 
-	float  *x1 = &x0[1];
-
-	if (num & 0x1) {
-		*x0++ = sinf_c(*x0);
-		x1++;
+	if (n & 0x1) {
+		*r++ = sinf_c(*x++);
 	}
 
 	float rng0 = __sinfv_rng[0];
 	float rng1 = __sinfv_rng[1];
 
-	while(num > 1){
+	while(n > 1){
 		
-		ax.f = fabsf(*x0);
-		bx.f = fabsf(*x1);
+		float x0 = *x++;
+		float x1 = *x++;
+		
+		ax.f = fabsf(x0);
+		bx.f = fabsf(x1);
 
 		//Range Reduction:
 		am = (int) (ax.f * rng0);	
@@ -72,8 +72,8 @@ void sinfv_c(float *x0, int num)
 		bx.f = bx.f - bn * rng1;
 		am = (am & 2) >> 1;
 		bm = (bm & 2) >> 1;
-		ax.i = ax.i ^ ((an ^ am ^ (*x0 < 0)) << 31);
-		bx.i = bx.i ^ ((bn ^ bm ^ (*x1 < 0)) << 31);
+		ax.i = ax.i ^ ((an ^ am ^ (x0 < 0)) << 31);
+		bx.i = bx.i ^ ((bn ^ bm ^ (x1 < 0)) << 31);
 			
 		//Taylor Polynomial (Estrins)
 		axx = ax.f * ax.f;	
@@ -84,17 +84,15 @@ void sinfv_c(float *x0, int num)
 		bb = (__sinfv_lut[1] * bx.f) * bxx + (__sinfv_lut[3] * bx.f);
 		axx = axx * axx;
 		bxx = bxx * bxx;
-		*x0 = ab + aa * axx;
-		*x1 = bb + ba * bxx;
-		x0 += 2;
-		x1 += 2;
-		num -= 2;
+		*r++ = ab + aa * axx;
+		*r++ = bb + ba * bxx;
+		n -= 2;
 	}
 	
 	
 }
 
-void sinfv_neon(float *x, int n)
+void sinfv_neon(float *r, float *x, int n)
 {
 #ifdef __MATH_NEON
 	asm volatile (""
@@ -102,6 +100,6 @@ void sinfv_neon(float *x, int n)
 	:"r"(x), "r"(n)
 	);
 #else
-	sinfv_c(x, n);
+	sinfv_c(r, x, n);
 #endif
 }

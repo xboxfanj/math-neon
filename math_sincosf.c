@@ -37,7 +37,7 @@ const float __sincosf_lut[8] = {
 	+0.99999661f,	//p1
 };
 
-void sincosf_c(float x, float r[2])
+void sincosf_c(float r[2], float x)
 {
 	union {
 		float 	f;
@@ -92,7 +92,7 @@ void sincosf_c(float x, float r[2])
 
 }
 
-void sincosf_neon(float x, float r[2])
+void sincosf_neon(float r[2], float x)
 {
 #ifdef __MATH_NEON
 	asm volatile (
@@ -141,6 +141,6 @@ void sincosf_neon(float x, float r[2])
     : "d0", "d1", "d2", "d3", "d4", "d5"
 	);
 #else
-	sincosf_c(x, r);
+	sincosf_c(r, x);
 #endif
 }
