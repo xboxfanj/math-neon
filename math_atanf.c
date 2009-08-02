@@ -32,7 +32,7 @@ const float __atanf_pi_2 = M_PI_2;
     
 float atanf_c(float x){
 
-	float a, b, r = 0, xx;
+	float a, b, r, xx;
 	int m;
 	
 	union {
@@ -40,10 +40,7 @@ float atanf_c(float x){
 		int i;
 	} xinv, ax;
 
-	//branch on ARM (abs(x) < 1.0):
-	ax.f = x;
-	ax.i = ax.i & (~0x80000000);
-	if (ax.i < 0x3F800000) goto label1;
+	ax.f = fabs(x);
 	
 	//fast inverse approximation (2x newton)
 	xinv.f = ax.f;
@@ -55,10 +52,12 @@ float atanf_c(float x){
 	xinv.f = xinv.f * b;	
 	b = 2.0 - xinv.f * ax.f;
 	xinv.f = xinv.f * b;
-	ax.f = -xinv.f;
-	r = M_PI_2;
-
-label1:
+	
+	//if |x| > 1.0 -> ax = 1/ax, r = pi/2
+	xinv.f = xinv.f + ax.f;
+	a = (ax.f > 1.0f);
+	ax.f = ax.f - a * xinv.f;
+	r = a * M_PI_2;
 	
 	//polynomial evaluation
 	xx = ax.f * ax.f;	
@@ -68,14 +67,10 @@ label1:
 	r = r + a * xx; 
 	r = r + b;
 
-	//branch on ARM:
-	ax.f = x;
-	if (ax.i > 0) goto label2;
-	r = -r;
-
-label2:
-
-
+	//if x < 0 -> r = -r
+	a = 2 * r;
+	b = (x < 0.0f);
+	r = r - a * b;
 
 	return r;
 }

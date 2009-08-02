@@ -19,21 +19,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "math.h"
-#include "math_neon.h"
+//#include "math_neon.h"
 
-const float __sinf_rng[2] = {
+static const float __sinf_rng[2] = {
 	2.0 / M_PI,
 	M_PI / 2.0
 };
 
-const float __sinf_lut[4] = {
+static const float __sinf_lut[4] = {
 	-0.00018365f,	//p7
 	-0.16664831f,	//p3
 	+0.00830636f,	//p5
 	+0.99999661f,	//p1
 };
 
-float sinf_c(float x)
+float sinf_c(const float x)
 {
 	union {
 		float 	f;
@@ -117,3 +117,14 @@ float sinf_neon(float x)
 	return sinf_c(x);
 #endif
 }
+
+const float cosf_c(const float x)
+{
+	return sinf_c(x + M_PI_2);
+}
+
+float cosf_neon(float x)
+{
+	return sinf_neon(x + M_PI_2);
+}
+

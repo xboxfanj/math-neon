@@ -18,34 +18,43 @@ License along with this library; if not, write to the Free
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+Assumes the floating point value |x| < 2147483648
+*/
+
 #include "math.h"
-#include "math_neon.h"
 
-	
-float fabsf_c(float x)
+
+float floorf_c(float x)
 {
-	union {
-		int i;
-		float f;
-	} xx;
-
-	xx.f = x;
-	xx.i = xx.i & 0x7FFFFFFF;
-	return xx.f;
-//	return fabsf(x);
+	int n;
+	float r;	
+	n = (int) x;
+	r = (float) n;
+	r = r - (r > x);
+	return r;
 }
 
-float fabsf_neon(float x)
+float floorf_neon(float x)
 {
 #ifdef __MATH_NEON
+
 	float r;
 	asm volatile (
-	"bic	 		%0, %1, #0x80000000		\n\t"	//r = x & ~(1 << 31)
-	:"=r"(r)
-	:"r"(x) 
+	"vdup.f32 		d0, %1					\n\t"	//d0 = {x, x}
+	"vcvt.s32.f32 	d1, d0					\n\t"	//d1 = (int) d0;
+	"vcvt.f32.s32 	d1, d1					\n\t"	//d1 = (float) d1;
+	"vcgt.f32 		d0, d1, d0				\n\t"	//d0 = (d1 > d0);
+	"vcvt.f32.u32 	d0, d0					\n\t"	//d0 = (float) d0;
+	"vsub.f32 		d1, d1, d0				\n\t"	//d1 = d1 - d0;
+	"vmov.f32 		%0, s2					\n\t"	//r = d1[0];
+	: "=r"(r)
+	: "r"(x)
+	: "d0", "d1"
 	);
+		
 	return r;
 #else
-	return fabsf_c(x);
+	return floorf_c(x);
 #endif
 }

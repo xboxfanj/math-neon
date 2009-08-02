@@ -18,15 +18,43 @@ License along with this library; if not, write to the Free
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/*
+Assumes the floating point value |x| < 2147483648
+*/
+
 #include "math.h"
-#include "math_neon.h"
 
-float cosf_c(float x)
+float ceilf_c(float x)
 {
-	return sinf_c(x + M_PI_2);
+	int n;
+	float r;	
+	n = (int) x;
+	r = (float) n;
+	r = r + (x > r);
+	return r;
 }
 
-float cosf_neon(float x)
+float ceilf_neon(float x)
 {
-	return sinf_neon(x + M_PI_2);
+#ifdef __MATH_NEON
+	float r;
+	asm volatile (
+	"vdup.f32 		d0, %1					\n\t"	//d0 = {x, x}
+	"vcvt.s32.f32 	d1, d0					\n\t"	//d1 = (int) d0;
+	"vcvt.f32.s32 	d1, d1					\n\t"	//d1 = (float) d1;
+	"vcgt.f32 		d0, d0, d1				\n\t"	//d0 = (d0 > d1);
+	"vcvt.f32.u32 	d0, d0					\n\t"	//d0 = (float) d0;
+	"vadd.f32 		d1, d1, d0				\n\t"	//d1 = d1 + d0;
+	"vmov.f32 		%0, s2					\n\t"	//r = d1[0];
+	: "=r"(r)
+	: "r"(x)
+	: "d0", "d1"
+	);
+		
+	return r;
+#else
+	return ceilf_c(x);
+#endif
 }
+
+
