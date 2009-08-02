@@ -33,7 +33,7 @@ static const float __sinf_lut[4] = {
 	+0.99999661f,	//p1
 };
 
-float sinf_c(const float x)
+float sinf_c(float x)
 {
 	union {
 		float 	f;
@@ -105,8 +105,8 @@ float sinf_neon(float x)
 	"vmul.f32 		d3, d2, d2				\n\t"	//d3 = d2*d2 = {x^4, x^4}		
 	"vmul.f32 		q0, q2, d1[0]			\n\t"	//q0 = q2 * d1[0] = {p7x, p3x, p5x, p1x}
 	"vmla.f32 		d1, d0, d2[0]			\n\t"	//d1 = d1 + d0*d2 = {p5x + p7x^3, p1x + p3x^3}		
-	"vmla.f32 		d1, d3, d1[0]			\n\t"	//d1 = d1 + d3*d0 = {p5x + p7x^3 + p5x^5 + p7x^7, p1x + p3x^3 + p5x^5 + p7x^7}		
-	"vmov.f32 		%0, s3					\n\t"	//r = s0
+	"vmla.f32 		d1, d3, d1[0]			\n\t"	//d1 = d1 + d3*d0 = {...., p1x + p3x^3 + p5x^5 + p7x^7}		
+	"vmov.f32 		%0, s3					\n\t"	//r = s3
 	
 	: "=r"(r)
 	: "r"(x), "r"(__sinf_rng), "r"(__sinf_lut) 
@@ -118,7 +118,7 @@ float sinf_neon(float x)
 #endif
 }
 
-const float cosf_c(const float x)
+const float cosf_c(float x)
 {
 	return sinf_c(x + M_PI_2);
 }

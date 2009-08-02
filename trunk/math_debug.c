@@ -54,8 +54,8 @@ int main(int argc, char** argv){
 		float dr;
 		float e;
 				
-		r = ceilf_c((float)x);
-		rr = ceilf((float)x);
+		r = fmodf_c(x, 3.0f);
+		rr = fmodf(x, 3.0f);
 		dr = fabsf(rr - r);
 		if (fabs(rr) > 0.0){
 			e = (100 * dr) / rr;

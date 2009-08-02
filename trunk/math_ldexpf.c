@@ -18,46 +18,32 @@ License along with this library; if not, write to the Free
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "math.h"
-#include <stdio.h>
-
-const float __log2f_A = 1.0f / 8388608.0f;
-const float __log2f_B = 127.0f;
-
-float log2f_fast(const float x){
-	
+float ldexpf_c(float m, int e)
+{
 	union {
-		float f;
-		int i;
-	} sx;
-	
-	sx.f = fabsf(x);	
-	sx.f = ((float) sx.i) * __log2f_A - __log2f_B;
-	
-	return sx.f;
+		float 	f;
+		int 	i;
+	} r;
+	r.f = m;
+	r.i += (e << 23);
+	return r.f;
 }
 
-const float __logf_A = 0.69314718055f;
-
-float logf_fast(const float x){
-	return log2f_fast(x) * __logf_A;
-}
-
-const float __expf_A = 8388608 / M_LN2;
-const float __expf_B = 1065353216 - 366393;
-
-float expf_fast(const float x){
-
-	union {
-		float f;
-		int i;
-	} sx;
-
-	sx.f = x;
-	sx.i = (__expf_A * x + __expf_B);
-	return sx.f;
-}
-
-float powf_fast(const float x, const float y){
-	return expf_fast(y * logf_fast(x));
+float ldexpf_neon(float m, int e)
+{
+#ifdef __MATH_NEON
+	float r;
+	asm volatile (
+	"lsl 			%1, %1, #23				\n\t"	//r1 = r1 << 23
+	"vdup.f32 		d0, %2					\n\t"	//d0 = {m, m}
+	"vdup.i32 		d1, %1					\n\t"	//d1 = {r1, r1}
+	"vadd.i32 		d0, d0, d1				\n\t"	//d0 = d0 + d1
+	"vmov.f32 		%0, s0					\n\t"	//r = s0
+	: "=r"(r), "=r"(e)
+	: "r"(m)
+	: "d0", "d1"
+	)
+#else
+	return ldexpf_c(m,e);
+#endif
 }
