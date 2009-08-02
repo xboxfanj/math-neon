@@ -22,23 +22,40 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdio.h>
 #include <math.h>
 
+void enable_runfast()
+{
+#ifdef __arm__
+	static const unsigned int x = 0x04086060;
+	static const unsigned int y = 0x03000000;
+	int r;
+	asm volatile (
+		"fmrx	%0, fpscr			\n\t"	//r0 = FPSCR
+		"and	%0, %0, %1			\n\t"	//r0 = r0 & 0x04086060
+		"orr	%0, %0, %2			\n\t"	//r0 = r0 | 0x03000000
+		"fmxr	fpscr, %0			\n\t"	//FPSCR = r0
+		: "=r"(r)
+		: "r"(x), "r"(y)
+	);
+#endif
+}
+
 int main(int argc, char** argv){
 		
-	double x, p;
+	float x, p;
 	int n = 0;
-	double emax = 0;
-	double erms = 0;
-	double xmax = 0;
-	
-	for(x = -10; x < 10; x += 0.01){
+	float emax = 0;
+	float erms = 0;
+	float xmax = 0;
+		
+	for(x = -10; x < 10; x += 0.1){
 		
 		float r;
 		float rr;
 		float dr;
-		double e;
-		
-		r = sinf_c((float)x);
-		rr = sinf((float)x);
+		float e;
+				
+		r = ceilf_c((float)x);
+		rr = ceilf((float)x);
 		dr = fabsf(rr - r);
 		if (fabs(rr) > 0.0){
 			e = (100 * dr) / rr;
@@ -51,10 +68,10 @@ int main(int argc, char** argv){
 		}else{
 			e = 0;
 		}
-		//printf("x=%f \t r=%f \t rr=%f \t e=%f \n", x, r, rr, e);
+		printf("x=%f \t r=%f \t rr=%f \t e=%f \n", x, r, rr, e);
 	}
 	printf("\n");
 	printf("Max Error %f at x = %f \n", emax, xmax);
-	printf("RMS Error %f \n", sqrtf(erms / n));
+	//printf("RMS Error %f \n", sqrtf(erms / n));
 	return 0;
 } 

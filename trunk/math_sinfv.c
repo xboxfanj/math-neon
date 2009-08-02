@@ -33,65 +33,64 @@ const float __sinfv_lut[4] = {
 	+0.99999661f,	//p1
 };
 
-void sinfv_c(float *x, int num)
+void sinfv_c(float *x0, int num)
 {
 	union {
 		float 	f;
 		int 	i;
-	} ax;
+	} ax, bx;
 	
-	float a, b, xx;
-	int m, n;
-	
-	int ii = num & 0x1;
-	int i = num ^ ii;
-	
-	while(i > 0){
+	float aa, ab, ba, bb, axx, bxx;
+	int am, bm, an, bn;
+
+	float  *x1 = &x0[1];
+
+	if (num & 0x1) {
+		*x0++ = sinf_c(*x0);
+		x1++;
+	}
+
+	float rng0 = __sinfv_rng[0];
+	float rng1 = __sinfv_rng[1];
+
+	while(num > 1){
 		
-		ax.f = fabsf(x[i]);
+		ax.f = fabsf(*x0);
+		bx.f = fabsf(*x1);
 
 		//Range Reduction:
-		m = (int) (ax.f * __sinfv_rng[0]);	
-		ax.f = ax.f - (((float)m) * __sinfv_rng[1]);
-
-		//Test Quadrant
-		n = m & 1;
-		ax.f = ax.f - n * __sinfv_rng[1];
-		m = (m&2) >> 1;
-		ax.i = ax.i ^ ((n ^ m ^ (x[i] < 0)) << 31);
-			
-		//Taylor Polynomial (Estrins)
-		xx = ax.f * ax.f;	
-		a = (__sinfv_lut[0] * ax.f) * xx + (__sinfv_lut[2] * ax.f);
-		b = (__sinfv_lut[1] * ax.f) * xx + (__sinfv_lut[3] * ax.f);
-		xx = xx * xx;
-		x[i] = b + a * xx;
-		i -= 1;
+		am = (int) (ax.f * rng0);	
+		bm = (int) (bx.f * rng0);	
 		
-		ax.f = fabsf(x[i]);
-
-		//Range Reduction:
-		m = (int) (ax.f * __sinfv_rng[0]);	
-		ax.f = ax.f - (((float)m) * __sinfv_rng[1]);
+		ax.f = ax.f - (((float)am) * rng1);
+		bx.f = bx.f - (((float)bm) * rng1);
 
 		//Test Quadrant
-		n = m & 1;
-		ax.f = ax.f - n * __sinfv_rng[1];
-		m = (m&2) >> 1;
-		ax.i = ax.i ^ ((n ^ m ^ (x[i] < 0)) << 31);
+		an = am & 1;
+		bn = bm & 1;
+		ax.f = ax.f - an * rng1;
+		bx.f = bx.f - bn * rng1;
+		am = (am & 2) >> 1;
+		bm = (bm & 2) >> 1;
+		ax.i = ax.i ^ ((an ^ am ^ (*x0 < 0)) << 31);
+		bx.i = bx.i ^ ((bn ^ bm ^ (*x1 < 0)) << 31);
 			
 		//Taylor Polynomial (Estrins)
-		xx = ax.f * ax.f;	
-		a = (__sinfv_lut[0] * ax.f) * xx + (__sinfv_lut[2] * ax.f);
-		b = (__sinfv_lut[1] * ax.f) * xx + (__sinfv_lut[3] * ax.f);
-		xx = xx * xx;
-		x[i] = b + a * xx;
-		i -= 1;
+		axx = ax.f * ax.f;	
+		bxx = bx.f * bx.f;	
+		aa = (__sinfv_lut[0] * ax.f) * axx + (__sinfv_lut[2] * ax.f);
+		ba = (__sinfv_lut[0] * bx.f) * bxx + (__sinfv_lut[2] * bx.f);
+		ab = (__sinfv_lut[1] * ax.f) * axx + (__sinfv_lut[3] * ax.f);
+		bb = (__sinfv_lut[1] * bx.f) * bxx + (__sinfv_lut[3] * bx.f);
+		axx = axx * axx;
+		bxx = bxx * bxx;
+		*x0 = ab + aa * axx;
+		*x1 = bb + ba * bxx;
+		x0 += 2;
+		x1 += 2;
+		num -= 2;
 	}
 	
-	if (ii) {
-		x[num - 1] = sinf_c(x[num-1]);
-	}
 	
 }
 
@@ -99,9 +98,10 @@ void sinfv_neon(float *x, int n)
 {
 #ifdef __MATH_NEON
 	asm volatile (""
+	:
+	:"r"(x), "r"(n)
 	);
-	return x;
 #else
-	return sinfv_c(x, n);
+	sinfv_c(x, n);
 #endif
 }
