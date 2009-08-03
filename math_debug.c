@@ -54,8 +54,8 @@ int main(int argc, char** argv){
 		float dr;
 		float e;
 		
-		r = ldexpf_neon(x, 3);
-		rr = fmodf(x, 3.0f);
+		r = logf_c(x);
+		rr = logf(x);
 		dr = fabsf(rr - r);
 		if (fabs(rr) > 0.0){
 			e = (100 * dr) / rr;

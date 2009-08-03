@@ -62,9 +62,10 @@ float logf_c(float x)
 	
 	//extract exponent
 	r.f = x;
-	m = (r.i - 0x3F800000) >> 23;
-	r.i = (r.i & 0x007FFFFF) | 0x3F800000;
-	
+	m = (r.i >> 23);
+	m = m - 127;
+	r.i = r.i - (m << 23);
+		
 	//Taylor Polynomial (Estrins)
 	xx = r.f * r.f;
 	a = (__logf_lut[4] * r.f) + (__logf_lut[0]);
@@ -85,40 +86,43 @@ float logf_c(float x)
 float logf_neon(float x)
 {
 #ifdef __MATH_NEON
-	float 	r;
-	int   	tmp0, tmp1;
 	asm volatile (
 	
+#if __MATH_FPABI == 1
+	"vdup.f32		d0, d0[0]				\n\t"	//d0 = {x,x};
+#else	
+	"vdup.f32		d0, r0					\n\t"	//d0 = {x,x};
+#endif
+	
 	//extract exponent
-	"ldr			%1, =0x3F800000			\n\t"	//tmp0 = 0x3F800000
-	"sub			%2, %3, %1				\n\t"	//tmp1 = x - tmp0
-	"lsr			%2, %2, #23				\n\t"	//tmp1 = tmp1 >> 23
-	"vdup.32 		d6, %2					\n\t"	//d6 = {tmp1, tmp1}
-	"ldr			%2, =0x007FFFFF			\n\t"	//tmp1 = 0x007FFFFF
-	"and			%3, %3, %2				\n\t"	//x = x & tmp1
-	"orr			%3, %3, %1				\n\t"	//x = x | tmp0
-	"vdup.32 		d0, %3					\n\t"	//d0 = {x, x}
+	"vmov.i32		d2, #127				\n\t"	//d2 = 127;
+	"vshr.u32		d6, d0, #23				\n\t"	//d6 = d0 >> 23;
+	"vsub.i32		d6, d6, d2				\n\t"	//d6 = d6 - d2;
+	"vshl.u32		d1, d6, #23				\n\t"	//d1 = d6 << 23;
+	"vsub.i32		d0, d0, d1				\n\t"	//d0 = d0 + d1;
 
 	//polynomial:
 	"vmul.f32 		d1, d0, d0				\n\t"	//d1 = d0*d0 = {x^2, x^2}	
-	"vld1.32 		{d2, d3, d4, d5}, [%5]	\n\t"	//q1 = {p0, p4, p2, p6}, q2 = {p1, p5, p3, p7} ;
+	"vld1.32 		{d2, d3, d4, d5}, [%1]	\n\t"	//q1 = {p0, p4, p2, p6}, q2 = {p1, p5, p3, p7} ;
 	"vmla.f32 		q1, q2, d0[0]			\n\t"	//q1 = q1 + q2 * d0[0]		
 	"vmla.f32 		d2, d3, d1[0]			\n\t"	//d2 = d2 + d3 * d1[0]		
 	"vmul.f32 		d1, d1, d1				\n\t"	//d1 = d1 * d1 = {x^4, x^4}	
 	"vmla.f32 		d2, d1, d2[1]			\n\t"	//d2 = d2 + d1 * d2[1]		
 
 	//add exponent 	
-	"vdup.32 		d7, %4					\n\t"	//d7 = {rng, rng}
+	"vdup.32 		d7, %0					\n\t"	//d7 = {rng, rng}
 	"vcvt.f32.s32 	d6, d6					\n\t"	//d6 = (float) d6
 	"vmla.f32 		d2, d6, d7				\n\t"	//d2 = d2 + d6 * d7		
 
-	"vmov.f32 		%0, s4					\n\t"	//r = s4
-	
-	: "=r"(r), "+r"(tmp0), "+r"(tmp1), "+r"(x)
-	: "r"(__logf_rng), "r"(__logf_lut) 
+#if __MATH_FPABI == 1
+	"vmov.f32 		s0, s4					\n\t"	//s0 = s4
+#else
+	"vmov.f32 		r0, s4					\n\t"	//r0 = s4
+#endif
+
+	:: "r"(__logf_rng), "r"(__logf_lut) 
     : "d0", "d1", "q1", "q2", "d6", "d7"
 	);
-	return r;
 #else
 	return logf_c(x);
 #endif
