@@ -22,6 +22,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Assumes the floating point value |x / y| < 2,147,483,648
 */
 
+#include "math_neon.h"
+
 float fmodf_c(float x, float y)
 {
 	int n;
@@ -55,13 +57,16 @@ float fmodf_c(float x, float y)
 float fmodf_neon(float x, float y)
 {
 #ifdef __MATH_NEON
-	float r;
 	asm volatile (
-	"vdup.f32 		d0, %1					\n\t"	//d0 = {x, x}
-	"vdup.f32 		d1, %2					\n\t"	//d1 = {y, y}
+#if (__MATH_FPABI == 1)
+	"vmov.f32 		s2, s1					\n\t"	//d1[0] = y
+#else
+	"vdup.f32 		d0, r0					\n\t"	//d0 = {x, x}
+	"vdup.f32 		d1, r1					\n\t"	//d1 = {y, y}
+#endif
 	
 	//fast reciporical approximation
-	"vrcpe.f32 		d2, d1					\n\t"	//d2 = ~1.0 / d1
+	"vrecpe.f32 	d2, d1					\n\t"	//d2 = ~1.0 / d1
 	"vrecps.f32		d3, d2, d1				\n\t"	//d3 = 2.0 - d2 * d1; 
 	"vmul.f32		d2, d2, d3				\n\t"	//d2 = d2 * d3; 
 	"vrecps.f32		d3, d2, d1				\n\t"	//d3 = 2.0 - d2 * d1; 
@@ -76,13 +81,12 @@ float fmodf_neon(float x, float y)
 	"vcvt.f32.s32	d2, d2					\n\t"	//d2 = (float) d2; 
 	"vmls.f32		d0, d1, d2				\n\t"	//d0 = d0 - d1 * d2; 
 
-	"vmov.f32 		%0, s0					\n\t"	//r = d0[0];
-	: "=r"(r)
-	: "r"(x), "r"(y)
-	: "d0", "d1", "d2", "d3"
+#if (__MATH_FPABI != 1)
+	"vmov.f32 		r0, s0					\n\t"	//r0 = d0[0];
+#endif
+	::: "d0", "d1", "d2", "d3"
 	);
 		
-	return r;
 #else
 	return fmodf_c(x, y);
 #endif

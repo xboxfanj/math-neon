@@ -18,6 +18,9 @@ License along with this library; if not, write to the Free
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include "math.h"
+#include "math_neon.h"
+
 float ldexpf_c(float m, int e)
 {
 	union {
@@ -34,15 +37,19 @@ float ldexpf_neon(float m, int e)
 #ifdef __MATH_NEON
 	float r;
 	asm volatile (
-	"lsl 			%1, %1, #23				\n\t"	//r1 = r1 << 23
-	"vdup.f32 		d0, %2					\n\t"	//d0 = {m, m}
-	"vdup.i32 		d1, %1					\n\t"	//d1 = {r1, r1}
+#if __MATH_FPABI == 1
+	"lsl 			r0, r0, #23				\n\t"	//r0 = r0 << 23	
+	"vdup.i32 		d1, r0					\n\t"	//d1 = {r0, r0}
 	"vadd.i32 		d0, d0, d1				\n\t"	//d0 = d0 + d1
-	"vmov.f32 		%0, s0					\n\t"	//r = s0
-	: "=r"(r), "=r"(e)
-	: "r"(m)
-	: "d0", "d1"
-	)
+#else
+	"lsl 			r1, r1, #23				\n\t"	//r1 = r1 << 23	
+	"vdup.f32 		d0, r0					\n\t"	//d0 = {r0, r0}	
+	"vdup.i32 		d1, r1					\n\t"	//d1 = {r1, r1}
+	"vadd.i32 		d0, d0, d1				\n\t"	//d0 = d0 + d1
+	"vmov.f32 		r0, s0					\n\t"	//r0 = s0
+#endif	
+	::: "d0", "d1"
+	);
 #else
 	return ldexpf_c(m,e);
 #endif

@@ -53,8 +53,8 @@ int main(int argc, char** argv){
 		float rr;
 		float dr;
 		float e;
-				
-		r = fmodf_c(x, 3.0f);
+		
+		r = ldexpf_neon(x, 3);
 		rr = fmodf(x, 3.0f);
 		dr = fabsf(rr - r);
 		if (fabs(rr) > 0.0){

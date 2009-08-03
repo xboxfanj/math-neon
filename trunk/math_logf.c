@@ -34,10 +34,8 @@ Peak Error:	~0.000601%
 RMS  Error: ~0.000005%
 */
 
-
 #include "math.h"
 #include "math_neon.h"
-
 
 const float __logf_rng =  0.693147180f;
 

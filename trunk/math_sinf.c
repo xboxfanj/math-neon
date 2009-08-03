@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "math.h"
-//#include "math_neon.h"
+#include "math_neon.h"
 
 static const float __sinf_rng[2] = {
 	2.0 / M_PI,
@@ -72,13 +72,16 @@ float sinf_c(float x)
 float sinf_neon(float x)
 {
 #ifdef __MATH_NEON
-	float r;
 	asm volatile (
-	"vdup.f32 		d0, %1					\n\t"	//d0 = {x, x}
+#if (__MATH_FPABI == 1)
+	"vdup.f32 		d0, d0[0]				\n\t"	//d0 = {x, x}
+#else
+	"vdup.f32 		d0, r0					\n\t"	//d0 = {x, x}
+#endif
 	"vabs.f32 		d1, d0					\n\t"	//d1 = {ax, ax}
 	
 	//Range Reduction:
-	"vld1.32 		d3, [%2]				\n\t"	//d3 = {invrange, range}
+	"vld1.32 		d3, [%0]				\n\t"	//d3 = {invrange, range}
 	"vmul.f32 		d2, d1, d3[0]			\n\t"	//d2 = d1 * d3[0] 
 	"vcvt.u32.f32 	d2, d2					\n\t"	//d2 = (int) d2
 	"vcvt.f32.u32 	d4, d2					\n\t"	//d4 = (float) d2
@@ -101,24 +104,27 @@ float sinf_neon(float x)
 	
 	//polynomial:
 	"vmul.f32 		d2, d1, d1				\n\t"	//d2 = d1*d1 = {x^2, x^2}	
-	"vld1.32 		{d4, d5}, [%3]			\n\t"	//d4 = {p7, p3}, d5 = {p5, p1}
+	"vld1.32 		{d4, d5}, [%1]			\n\t"	//d4 = {p7, p3}, d5 = {p5, p1}
 	"vmul.f32 		d3, d2, d2				\n\t"	//d3 = d2*d2 = {x^4, x^4}		
 	"vmul.f32 		q0, q2, d1[0]			\n\t"	//q0 = q2 * d1[0] = {p7x, p3x, p5x, p1x}
 	"vmla.f32 		d1, d0, d2[0]			\n\t"	//d1 = d1 + d0*d2 = {p5x + p7x^3, p1x + p3x^3}		
 	"vmla.f32 		d1, d3, d1[0]			\n\t"	//d1 = d1 + d3*d0 = {...., p1x + p3x^3 + p5x^5 + p7x^7}		
-	"vmov.f32 		%0, s3					\n\t"	//r = s3
-	
-	: "=r"(r)
-	: "r"(x), "r"(__sinf_rng), "r"(__sinf_lut) 
+
+#if (__MATH_FPABI == 1)	
+	"vmov.f32 		s0, s3					\n\t"	//s0 = s3
+#else
+	"vmov.f32 		r0, s3					\n\t"	//r0 = s3
+#endif
+	: 
+	: "r"(__sinf_rng), "r"(__sinf_lut) 
     : "d0", "d1", "d2", "d3", "d4", "d5"
 	);
-	return r;
 #else
 	return sinf_c(x);
 #endif
 }
 
-const float cosf_c(float x)
+float cosf_c(float x)
 {
 	return sinf_c(x + M_PI_2);
 }
