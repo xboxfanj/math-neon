@@ -66,8 +66,9 @@ float powf_c(float x, float n)
 	
 	//extract exponent
 	r.f = x;
-	m = (r.i - 0x3F800000) >> 23;
-	r.i = (r.i & 0x007FFFFF) | 0x3F800000;
+	m = (r.i >> 23);
+	m = m - 127;
+	r.i = r.i - (m << 23);
 	
 	//Taylor Polynomial (Estrins)
 	xx = r.f * r.f;
@@ -108,13 +109,68 @@ float powf_c(float x, float n)
 	return r.f;
 }
 
-float powf_neon(float x)
+float powf_neon(float x, float n)
 {
 #ifdef __MATH_NEON
-	float r;
-	asm volatile (""
+	asm volatile (
+		
+#if __MATH_FPABI == 1
+	"vdup.f32		d16, d0[1]				\n\t"	//d16 = {y,y};	
+	"vdup.f32		d0, d0[0]				\n\t"	//d0 = {x,x};
+#else	
+	"vdup.f32		d16, r1					\n\t"	//d16 = {y,y};
+	"vdup.f32		d0, r0					\n\t"	//d0 = {x,x};
+#endif
+	
+	//extract exponent
+	"vmov.i32		d2, #127				\n\t"	//d2 = 127;
+	"vshr.u32		d6, d0, #23				\n\t"	//d6 = d0 >> 23;
+	"vsub.i32		d6, d6, d2				\n\t"	//d6 = d6 - d2;
+	"vshl.u32		d1, d6, #23				\n\t"	//d1 = d6 << 23;
+	"vsub.i32		d0, d0, d1				\n\t"	//d0 = d0 + d1;
+
+	//polynomial:
+	"vmul.f32 		d1, d0, d0				\n\t"	//d1 = d0*d0 = {x^2, x^2}	
+	"vld1.32 		{d2, d3, d4, d5}, [%1]!	\n\t"	//q1 = {p0, p4, p2, p6}, q2 = {p1, p5, p3, p7} ;
+	"vmla.f32 		q1, q2, d0[0]			\n\t"	//q1 = q1 + q2 * d0[0]		
+	"vmla.f32 		d2, d3, d1[0]			\n\t"	//d2 = d2 + d3 * d1[0]		
+	"vmul.f32 		d1, d1, d1				\n\t"	//d1 = d1 * d1 = {x^4, x^4}	
+	"vmla.f32 		d2, d1, d2[1]			\n\t"	//d2 = d2 + d1 * d2[1]		
+
+	//add exponent 	
+	"vld1.32 		d7, [%0]				\n\t"	//d7 = {invrange, range}
+	"vcvt.f32.s32 	d6, d6					\n\t"	//d6 = (float) d6
+	"vmla.f32 		d2, d6, d7[1]			\n\t"	//d2 = d2 + d6 * d7[1]		
+
+	"vdup.f32 		d0, d2[0]				\n\t"	//d0 = d2[0]		
+	"vmul.f32 		d0, d0, d16				\n\t"	//d0 = d0 * d16	
+
+	//Range Reduction:
+	"vmul.f32 		d6, d0, d7[0]			\n\t"	//d6 = d0 * d7[0] 
+	"vcvt.u32.f32 	d6, d6					\n\t"	//d6 = (int) d6
+	"vcvt.f32.u32 	d1, d6					\n\t"	//d1 = (float) d6
+	"vmls.f32 		d0, d1, d7[1]			\n\t"	//d0 = d0 - d1 * d7[1]
+		
+	//polynomial:
+	"vmul.f32 		d1, d0, d0				\n\t"	//d1 = d0*d0 = {x^2, x^2}	
+	"vld1.32 		{d2, d3, d4, d5}, [%1]	\n\t"	//q1 = {p0, p4, p2, p6}, q2 = {p1, p5, p3, p7} ;
+	"vmla.f32 		q1, q2, d0[0]			\n\t"	//q1 = q1 + q2 * d0[0]		
+	"vmla.f32 		d2, d3, d1[0]			\n\t"	//d2 = d2 + d3 * d1[0]		
+	"vmul.f32 		d1, d1, d1				\n\t"	//d1 = d1 * d1 = {x^4, x^4}	
+	"vmla.f32 		d2, d1, d2[1]			\n\t"	//d2 = d2 + d1 * d2[1]		
+
+	//multiply by 2 ^ m 	
+	"vshl.i32 		d6, d6, #23				\n\t"	//d6 = d6 << 23		
+	"vadd.i32 		d0, d2, d6				\n\t"	//d0 = d2 + d6		
+
+
+#if (__MATH_FPABI != 1)
+	"vmov.f32 		r0, s0					\n\t"	//r0 = s0
+#endif
+
+	:: "r"(__powf_rng), "r"(__powf_lut) 
+    : "d0", "d1", "q1", "q2", "d6", "d7"
 	);
-	return r;
 #else
 	return expf_c(x);
 #endif

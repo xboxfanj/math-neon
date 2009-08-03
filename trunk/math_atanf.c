@@ -30,7 +30,8 @@ const float __atanf_lut[4] = {
  
 const float __atanf_pi_2 = M_PI_2;
     
-float atanf_c(float x){
+float atanf_c(float x)
+{
 
 	float a, b, r, xx;
 	int m;
@@ -53,11 +54,11 @@ float atanf_c(float x){
 	b = 2.0 - xinv.f * ax.f;
 	xinv.f = xinv.f * b;
 	
-	//if |x| > 1.0 -> ax = 1/ax, r = pi/2
+	//if |x| > 1.0 -> ax = -1/ax, r = pi/2
 	xinv.f = xinv.f + ax.f;
 	a = (ax.f > 1.0f);
 	ax.f = ax.f - a * xinv.f;
-	r = a * M_PI_2;
+	r = a * __atanf_pi_2;
 	
 	//polynomial evaluation
 	xx = ax.f * ax.f;	
@@ -79,17 +80,17 @@ float atanf_c(float x){
 float atanf_neon(float x)
 {
 #ifdef __MATH_NEON
-	float 	r;
-	int volatile tmp0, tmp1;
 	asm volatile (
-	
-	//Branch 1
-	"bic	 		%1, %3, #0x80000000		\n\t"	//tmp0 = x & ~(1 << 31)
-	"vdup.32 		d0, %1					\n\t"	//d0 = {ax, ax}
-	"ldr	 		%2, =0x3F800000			\n\t"	//tmp1 = 0x3f800000
-	"cmp	 		%1, %2					\n\t"	//flags = cmp(tmp0, tmp1)
-	"vmov.i32		d5, #0.0				\n\t"	//d5[1] = 0
-	"blt	 		1f						\n\t"	//if (lt) goto 1
+
+#if __MATH_FPABI == 1
+	"vdup.f32	 	d0, d0[0]				\n\t"	//d0 = {x, x};
+#else
+	"vdup.f32	 	d0, r0					\n\t"	//d0 = {x, x};
+#endif
+
+	"vdup.f32	 	d4, %1					\n\t"	//d4 = {pi/2, pi/2};
+	"vmov.f32	 	d6, d0					\n\t"	//d6 = d0;
+	"vabs.f32	 	d0, d0					\n\t"	//d0 = fabs(d0);
 
 	//fast reciporical approximation
 	"vrecpe.f32		d1, d0					\n\t"	//d1 = ~ 1 / d0; 
@@ -97,34 +98,38 @@ float atanf_neon(float x)
 	"vmul.f32		d1, d1, d2				\n\t"	//d1 = d1 * d2; 
 	"vrecps.f32		d2, d1, d0				\n\t"	//d2 = 2.0 - d1 * d0; 
 	"vmul.f32		d1, d1, d2				\n\t"	//d1 = d1 * d2; 
-	"vneg.f32		d1, d1					\n\t"	//d1 = -d1; 
-	"vmov.f32		s11, %5					\n\t"	//d5[1] = pi / 2; 	
 
-	"1:										\n\t"	//label 1
-	
+	//if |x| > 1.0 -> ax = 1/ax, r = pi/2
+	"vadd.f32		d1, d1, d0				\n\t"	//d1 = d1 + d0; 
+	"vmov.f32	 	d2, #1.0				\n\t"	//d2 = 1.0;
+	"vcgt.f32	 	d3, d0, d2				\n\t"	//d3 = (d0 > d2);
+	"vcvt.f32.u32	d3, d3					\n\t"	//d3 = (float) d3;
+	"vmls.f32		d0, d1, d3				\n\t"	//d0 = d0 - d1 * d3; 	
+	"vmul.f32		d5, d3, d4				\n\t"	//d5 = d3 * d4; 	
+		
 	//polynomial:
 	"vmul.f32 		d2, d1, d1				\n\t"	//d2 = d1*d1 = {ax^2, ax^2}	
-	"vld1.32 		{d4, d5}, [%4]			\n\t"	//d4 = {p7, p3}, d5 = {p5, p1}
+	"vld1.32 		{d4, d5}, [%0]			\n\t"	//d4 = {p7, p3}, d5 = {p5, p1}
 	"vmul.f32 		d3, d2, d2				\n\t"	//d3 = d2*d2 = {x^4, x^4}		
 	"vmul.f32 		q0, q2, d1[0]			\n\t"	//q0 = q2 * d1[0] = {p7x, p3x, p5x, p1x}
 	"vmla.f32 		d1, d0, d2[0]			\n\t"	//d1 = d1 + d0*d2 = {p5x + p7x^3, p1x + p3x^3}		
 	"vmla.f32 		d1, d3, d1[0]			\n\t"	//d1 = d1 + d3*d0 = {..., p1x + p3x^3 + p5x^5 + p7x^7}		
 	"vadd.f32 		d1, d1, d5				\n\t"	//d1 = d1 + d5		
 	
-	"cmp	 		%3, #0					\n\t"	//flags = cmp(x, 0)	
-	"bgt	 		2f						\n\t"	//if (gt) goto 2
-	"vneg.f32		d1, d1					\n\t"	//d1 = -d1
+	"vadd.f32 		d2, d1, d1				\n\t"	//d2 = d1 + d1		
+	"vclt.f32	 	d3, d6, #0				\n\t"	//d3 = (d6 < 0)	
+	"vcvt.f32.u32	d3, d3					\n\t"	//d3 = (float) d3	
+	"vmls.f32 		d1, d3, d2				\n\t"	//d1 = d1 - d2 * d3;
 
-	"2:										\n\t"	//label 2
-		
-	"vmov.f32 		%0, s3					\n\t"	//r = d1[1]
-	
-	: "=r"(r), "+r"(tmp0), "+r"(tmp1)
-	: "r"(x), "r"(__atanf_lut),  "r"(__atanf_pi_2) 
-    : "d0", "d1", "d2", "d3", "d4", "d5"
+#if __MATH_FPABI == 1
+	"vmov.f32 		s0, s3					\n\t"	//s0 = s3
+#else
+	"vmov.f32 		r0, s3					\n\t"	//r0 = s3
+#endif
+
+	:: "r"(__atanf_lut),  "r"(__atanf_pi_2) 
+    : "d0", "d1", "d2", "d3", "d4", "d5", "d6"
 	);
-
-	return r;
 
 #else
 	return atanf_c(x);

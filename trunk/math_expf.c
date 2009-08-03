@@ -119,7 +119,7 @@ float expf_neon(float x)
 	"vadd.i32 		d0, d2, d6				\n\t"	//d0 = d2 + d6		
 
 #if (__MATH_FPABI != 1)
-	"vmov.f32 		r0, s0					\n\t"	//r = s4
+	"vmov.f32 		r0, s0					\n\t"	//r0 = s0
 #endif
 
 	:: "r"(__expf_rng), "r"(__expf_lut) 
