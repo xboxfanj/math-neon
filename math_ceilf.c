@@ -23,6 +23,7 @@ Assumes the floating point value |x| < 2147483648
 */
 
 #include "math.h"
+#include "math_neon.h"
 
 float ceilf_c(float x)
 {
@@ -37,21 +38,25 @@ float ceilf_c(float x)
 float ceilf_neon(float x)
 {
 #ifdef __MATH_NEON
-	float r;
 	asm volatile (
-	"vdup.f32 		d0, %1					\n\t"	//d0 = {x, x}
+
+#if (__MATH_FPABI != 1)
+ 	"vdup.f32 		d0, r0					\n\t"	//d0 = {x, x}
+#endif
+
 	"vcvt.s32.f32 	d1, d0					\n\t"	//d1 = (int) d0;
 	"vcvt.f32.s32 	d1, d1					\n\t"	//d1 = (float) d1;
 	"vcgt.f32 		d0, d0, d1				\n\t"	//d0 = (d0 > d1);
 	"vcvt.f32.u32 	d0, d0					\n\t"	//d0 = (float) d0;
-	"vadd.f32 		d1, d1, d0				\n\t"	//d1 = d1 + d0;
-	"vmov.f32 		%0, s2					\n\t"	//r = d1[0];
-	: "=r"(r)
-	: "r"(x)
-	: "d0", "d1"
+	"vadd.f32 		d0, d1, d0				\n\t"	//d0 = d1 + d0;
+
+#if (__MATH_FPABI != 1)
+	"vmov.f32 		r0, s0					\n\t"	//r0 = d0[0];
+#endif
+
+	::: "d0", "d1"
 	);
 		
-	return r;
 #else
 	return ceilf_c(x);
 #endif

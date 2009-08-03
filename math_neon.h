@@ -9,7 +9,7 @@
 #define __MATH_NEON			
 
 //Floating Point value ABI 0=softfp, 1=hardfp. Only effects ASM routines.
-#define __MATH_FPABI 	0		
+#define __MATH_FPABI 	1	
 
 #endif
 

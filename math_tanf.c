@@ -82,13 +82,17 @@ float tanf_c(float x){
 float tanf_neon(float x)
 {
 #ifdef __MATH_NEON
-	float r;
 	asm volatile (
-	"vdup.f32 		d0, %1					\n\t"	//d0 = {x, x}
+
+#if __MATH_FPABI == 1
+	"vdup.f32 		d0, d0[0]				\n\t"	//d0 = {x, x}
+#else
+	"vdup.f32 		d0, r0					\n\t"	//d0 = {x, x}
+#endif
 	"vabs.f32 		d1, d0					\n\t"	//d1 = {ax, ax}
 	
 	//Range Reduction:
-	"vld1.32 		d3, [%2]				\n\t"	//d3 = {invrange, range}
+	"vld1.32 		d3, [%0]				\n\t"	//d3 = {invrange, range}
 	"vmul.f32 		d2, d1, d3[0]			\n\t"	//d2 = d1 * d3[0] 
 	"vcvt.u32.f32 	d2, d2					\n\t"	//d2 = (int) d2
 	"vcvt.f32.u32 	d4, d2					\n\t"	//d4 = (float) d2
@@ -108,7 +112,7 @@ float tanf_neon(float x)
 	
 	//polynomial:
 	"vmul.f32 		d2, d1, d1				\n\t"	//d2 = d1*d1 = {x^2, x^2}	
-	"vld1.32 		{d4, d5}, [%3]			\n\t"	//d4 = {p7, p3}, d5 = {p5, p1}
+	"vld1.32 		{d4, d5}, [%1]			\n\t"	//d4 = {p7, p3}, d5 = {p5, p1}
 	"vmul.f32 		d3, d2, d2				\n\t"	//d3 = d2*d2 = {x^4, x^4}		
 	"vmul.f32 		q0, q2, d1[0]			\n\t"	//q0 = q2 * d1[0] = {p7x, p3x, p5x, p1x}
 	"vmla.f32 		d1, d0, d2[0]			\n\t"	//d1 = d1 + d0*d2 = {p5x + p7x^3, p1x + p3x^3}		
@@ -129,13 +133,16 @@ float tanf_neon(float x)
 	"vmul.f32 		d0, d0, d4				\n\t"	//d0 = d0 * d4	
 	
 	"vmul.f32 		d0, d0, d1				\n\t"	//d0 = d0 * d1
-	"vmov.f32 		%0, s1					\n\t"	//r = s1
 	
-	: "=r"(r)
-	: "r"(x), "r"(__tanf_rng), "r"(__tanf_lut) 
+#if __MATH_FPABI == 1
+	"vmov.f32 		s0, s1					\n\t"	//s0 = s1
+#else
+	"vmov.f32 		r0, s1					\n\t"	//r0 = s1
+#endif
+	
+	:: "r"(__tanf_rng), "r"(__tanf_lut) 
     : "d0", "d1", "d2", "d3", "d4", "d5"
 	);
-	return r;
 #else
 	return tanf_c(x);
 #endif

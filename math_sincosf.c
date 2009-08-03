@@ -94,11 +94,18 @@ void sincosf_c(float r[2], float x)
 
 void sincosf_neon(float r[2], float x)
 {
+
+//HACK: Assumes for softfp that r1 = x, and for hardfp that s0 = x.
+
 #ifdef __MATH_NEON
 	asm volatile (
 	//{x, y} = {x, x + pi/2}
-	"vdup.f32 		d1, %1					\n\t"	//d1 = {x, x}
-	"vld1.32 		d3, [%2]				\n\t"	//d3 = {invrange, range}
+#if (__MATH_FPABI == 1)
+	"vdup.f32 		d1, d0[0]				\n\t"	//d1 = {x, x}
+#else
+	"vdup.f32 		d1, r1					\n\t"	//d1 = {x, x}
+#endif
+	"vld1.32 		d3, [%1]				\n\t"	//d3 = {invrange, range}
 	"vadd.f32 		d0, d1, d3				\n\t"	//d0 = d1 + d3
 	"vmov.f32 		s0, s2					\n\t"	//d0[0] = d1[0]	
 	"vabs.f32 		d1, d0					\n\t"	//d1 = {abs(x), abs(y)}
@@ -125,19 +132,19 @@ void sincosf_neon(float r[2], float x)
 	"veor.i32 		d0, d1, d4				\n\t"	//d0 = d1 ^ d4
 	
 	//polynomial:
-	"vldm 			%3!, {d2, d3}	 		\n\t"	//d2 = {p7, p7}, d3 = {p5, p5}, r3 += 4;
+	"vldm 			%2!, {d2, d3}	 		\n\t"	//d2 = {p7, p7}, d3 = {p5, p5}, r3 += 4;
 	"vmul.f32 		d1, d0, d0				\n\t"	//d1 = d0 * d0 = {x^2, y^2}
-	"vldm 			%3!, {d4}				\n\t"	//d4 = {p3, p3}, r3 += 2;
+	"vldm 			%2!, {d4}				\n\t"	//d4 = {p3, p3}, r3 += 2;
 	"vmla.f32 		d3, d2, d1				\n\t"	//d3 = d3 + d2 * d1;	
-	"vldm	 		%3!, {d5}				\n\t"	//d5 = {p1, p1}, r3 += 2;
+	"vldm	 		%2!, {d5}				\n\t"	//d5 = {p1, p1}, r3 += 2;
 	"vmla.f32 		d4, d3, d1				\n\t"	//d4 = d4 + d3 * d1;	
 	"vmla.f32 		d5, d4, d1				\n\t"	//d5 = d5 + d4 * d1;	
 	"vmul.f32 		d5, d5, d0				\n\t"	//d5 = d5 * d0;	
 	
 	"vstm.f32 		%0, {d5}				\n\t"	//r[0] = d5[0], r[1]=d5[1];	
 	
-	: "=r"(r)
-	: "r"(x), "r"(__sincosf_rng), "r"(__sincosf_lut) 
+	: "+r"(r)
+	: "r"(__sincosf_rng), "r"(__sincosf_lut) 
     : "d0", "d1", "d2", "d3", "d4", "d5"
 	);
 #else
