@@ -86,7 +86,7 @@ float 		tanf_c(float x);
 float 		tanf_neon(float x);
 
 /* 
-function:	tanf
+function:	atanf
 return: 	the arctangent evaluated at x.	
 expression: r = atan(x) 	
 */
@@ -144,6 +144,14 @@ expression: r = m * (2 ** e)
 */
 float 		ldexpf_c(float m, int e);
 float 		ldexpf_neon(float m, int e);
+
+/* 
+function:	frexpf
+return: 	the exponent and mantissa of x 
+*/
+
+float 		frexpf_c(float x, int *e);
+float 		frexpf_neon(float x, int *e);
 
 /* 
 function:	fmodf

@@ -53,9 +53,9 @@ int main(int argc, char** argv){
 		float rr;
 		float dr;
 		float e;
-		
-		r = logf_c(x);
-		rr = logf(x);
+		int exp;
+		r = frexpf_c(x, &exp);
+		rr = frexpf(x, &exp);
 		dr = fabsf(rr - r);
 		if (fabs(rr) > 0.0){
 			e = (100 * dr) / rr;

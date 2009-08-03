@@ -21,30 +21,25 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "math.h"
 #include "math_neon.h"
 
-	
-float fabsf_c(float x)
+float frexpf_c(float x, int *e)
 {
 	union {
-		int i;
-		float f;
-	} xx;
-
-	xx.f = x;
-	xx.i = xx.i & 0x7FFFFFFF;
-	return xx.f;
+		float 	f;
+		int 	i;
+	} r;
+	int n;
+	
+	r.f = x;
+	n = r.i >> 23;
+	n = n & 0xFF;
+	n = n - 126;
+	r.i = r.i - (n << 23);
+	*e = n;
+	return r.f;
 }
 
-float fabsf_neon(float x)
+float frexpf_neon(float x, int *e)
 {
-#ifdef __MATH_NEON
-	asm volatile (
-#if __MATH_FPABI == 1
-	"fabss	 		s0, s0					\n\t"	//s0 = fabs(s0)
-#else
-	"bic	 		r0, r0, #0x80000000		\n\t"	//r0 = r0 & ~(1 << 31)
-#endif
-	);
-#else
-	return fabsf_c(x);
-#endif
+	//Wow. Compiler actually produces ~optimal code. :)
+	return frexpf_c(x, e);
 }
