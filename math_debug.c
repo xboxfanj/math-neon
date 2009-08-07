@@ -41,21 +41,19 @@ void enable_runfast()
 
 int main(int argc, char** argv){
 		
-	float x, p;
+	float x, y, p;
 	int n = 0;
 	float emax = 0;
 	float erms = 0;
 	float xmax = 0;
-		
-	for(x = -10; x < 10; x += 0.1){
-		
+	for(x = 1; x < 10000; x += 1){
 		float r;
 		float rr;
 		float dr;
 		float e;
-		int exp;
-		r = frexpf_c(x, &exp);
-		rr = frexpf(x, &exp);
+		
+		r = log10f_c(x);
+		rr = log10f(x);
 		dr = fabsf(rr - r);
 		if (fabs(rr) > 0.0){
 			e = (100 * dr) / rr;
@@ -72,6 +70,6 @@ int main(int argc, char** argv){
 	}
 	printf("\n");
 	printf("Max Error %f at x = %f \n", emax, xmax);
-	//printf("RMS Error %f \n", sqrtf(erms / n));
+	printf("RMS Error %f \n", sqrtf(erms / n));
 	return 0;
 } 

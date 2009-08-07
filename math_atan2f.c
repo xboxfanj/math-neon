@@ -21,61 +21,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "math.h"
 #include "math_neon.h"
 
-const float __atanf_lut[4] = {
+const float __atan2f_lut[4] = {
 	-0.0443265554792128,	//p7
 	-0.3258083974640975,	//p3
 	+0.1555786518463281,	//p5
 	+0.9997878412794807  	//p1
 }; 
  
-const float __atanf_pi_2 = M_PI_2;
-    
-float atanf_c(float x)
-{
+const float __atan2f_pi_2 = M_PI_2;
 
-	float a, b, r, xx;
-	int m;
-	
-	union {
-		float f;
-		int i;
-	} xinv, ax;
 
-	ax.f = fabs(x);
-	
-	//fast inverse approximation (2x newton)
-	xinv.f = ax.f;
-	m = 0x3F800000 - (xinv.i & 0x7F800000);
-	xinv.i = xinv.i + m;
-	xinv.f = 1.41176471f - 0.47058824f * xinv.f;
-	xinv.i = xinv.i + m;
-	b = 2.0 - xinv.f * ax.f;
-	xinv.f = xinv.f * b;	
-	b = 2.0 - xinv.f * ax.f;
-	xinv.f = xinv.f * b;
-	
-	//if |x| > 1.0 -> ax = -1/ax, r = pi/2
-	xinv.f = xinv.f + ax.f;
-	a = (ax.f > 1.0f);
-	ax.f = ax.f - a * xinv.f;
-	r = a * __atanf_pi_2;
-	
-	//polynomial evaluation
-	xx = ax.f * ax.f;	
-	a = (__atanf_lut[0] * ax.f) * xx + (__atanf_lut[2] * ax.f);
-	b = (__atanf_lut[1] * ax.f) * xx + (__atanf_lut[3] * ax.f);
-	xx = xx * xx;
-	r = r + a * xx; 
-	r = r + b;
-
-	//if x < 0 -> r = -r
-	a = 2 * r;
-	b = (x < 0.0f);
-	r = r - a * b;
-
-	return r;
-}
-
+#if 0
 
 float atanf_neon(float x)
 {
@@ -135,5 +91,67 @@ float atanf_neon(float x)
 	return atanf_c(x);
 #endif
 }
+#endif
 
+float atan2f_c(float y, float x)
+{
+	float a, b, c, r, xx;
+	int m;
+	union {
+		float f;
+		int i;
+	} xinv;
+
+	//fast inverse approximation (2x newton)
+	xx = fabs(x);
+	xinv.f = xx;
+	m = 0x3F800000 - (xinv.i & 0x7F800000);
+	xinv.i = xinv.i + m;
+	xinv.f = 1.41176471f - 0.47058824f * xinv.f;
+	xinv.i = xinv.i + m;
+	b = 2.0 - xinv.f * xx;
+	xinv.f = xinv.f * b;	
+	b = 2.0 - xinv.f * xx;
+	xinv.f = xinv.f * b;
+	
+	c = fabs(y * xinv.f);
+
+	//fast inverse approximation (2x newton)
+	xinv.f = c;
+	m = 0x3F800000 - (xinv.i & 0x7F800000);
+	xinv.i = xinv.i + m;
+	xinv.f = 1.41176471f - 0.47058824f * xinv.f;
+	xinv.i = xinv.i + m;
+	b = 2.0 - xinv.f * c;
+	xinv.f = xinv.f * b;	
+	b = 2.0 - xinv.f * c;
+	xinv.f = xinv.f * b;
+	
+	//if |x| > 1.0 -> ax = -1/ax, r = pi/2
+	xinv.f = xinv.f + c;
+	a = (c > 1.0f);
+	c = c - a * xinv.f;
+	r = a * __atan2f_pi_2;
+	
+	//polynomial evaluation
+	xx = c * c;	
+	a = (__atan2f_lut[0] * c) * xx + (__atan2f_lut[2] * c);
+	b = (__atan2f_lut[1] * c) * xx + (__atan2f_lut[3] * c);
+	xx = xx * xx;
+	r = r + a * xx; 
+	r = r + b;
+
+	//determine quadrant and test for small x.
+	b = M_PI;
+	b = b - 2.0f * r;
+	r = r + (x < 0.0f) * b;
+	b = (fabs(x) < 0.000001f);
+	c = !b;
+	r = c * r;
+	r = r + __atan2f_pi_2 * b;
+	b = r + r;
+	r = r - (y < 0.0f) * b;
+	
+	return r;
+}
 

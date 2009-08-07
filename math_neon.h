@@ -63,8 +63,8 @@ return: 	both the sine and the cosine evaluated at x radians.
 expression: r = {sin(x), cos(x)} 	
 notes:		faster than evaluating seperately.
 */
-void		sincosf_c(float r[2], float x);
-void		sincosf_neon(float r[2], float x);
+void		sincosf_c(float x, float r[2]);
+void		sincosf_neon(float x, float r[2]);
 
 /* 
 function:	sinfv
@@ -73,8 +73,8 @@ expression: r[i] = sin(x[i])
 notes:		faster than evaluating individually.
 			r and x can be the same memory location.
 */
-void		sinfv_c(float *r, float *x, int n);
-void  		sinfv_neon( float *r, float *x, int n);
+void		sinfv_c(float *x, int n, float *r);
+void  		sinfv_neon(float *x, int n, float *r);
 
 /* 
 function:	tanf
@@ -94,6 +94,14 @@ float 		atanf_c(float x);
 float 		atanf_neon(float x);
 
 /* 
+function:	atanf
+return: 	the arctangent evaluated at x.	
+expression: r = atan(x) 	
+*/
+float 		atan2f_c(float y, float x);
+float 		atan2f_neon(float y, float x);
+
+/* 
 function:	expf
 return: 	the natural exponential evaluated at x.	
 expression: r = e ** x	
@@ -105,10 +113,19 @@ float 		expf_neon(float x);
 function:	logf
 return: 	the value of the natural logarithm of x.	
 expression: r = ln(x)	
-notes:		assumes |x| >= 0
+notes:		assumes x > 0
 */
 float 		logf_c(float x);
 float 		logf_neon(float x);
+
+/* 
+function:	log10f
+return: 	the value of the power 10 logarithm of x.	
+expression: r = log10(x)	
+notes:		assumes x > 0
+*/
+float 		log10f_c(float x);
+float 		log10f_neon(float x);
 
 /* 
 function:	powf
@@ -162,7 +179,26 @@ notes:		assumes that |x / y| < 2 ** 31
 float 		fmodf_c(float x, float y);
 float 		fmodf_neon(float x, float y);
 
-float _frexpf(const float x);
+/* 
+function:	modf
+return: 	breaks x into the integer (i) and fractional part (return)
+notes:		assumes that |x| < 2 ** 31 
+*/
+float 		modf_c(float x, int *i);
+float 		modf_neon(float x, int *i);
+
+/* 
+function:	modf
+return: 	breaks x into the integer (i) and fractional part (return)
+notes:		assumes that |x| < 2 ** 31 
+*/
+float 		sqrtf_c(float x);
+float 		sqrtf_neon(float x);
+
+
+
+
+
 float _log10f(const float x);
 float _sinhf(const float x);
 float _tanhf(const float x);
