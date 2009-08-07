@@ -117,6 +117,29 @@ expression: r = asin(x)
 float 		acosf_c(float x);
 float 		acosf_neon(float x);
 
+/* 
+function:	sinhf
+return: 	the arcsine evaluated at x.	
+expression: r = asin(x) 	
+*/
+float 		sinhf_c(float x);
+float 		sinhf_neon(float x);
+
+/* 
+function:	coshf
+return: 	the arcsine evaluated at x.	
+expression: r = asin(x) 	
+*/
+float 		coshf_c(float x);
+float 		coshf_neon(float x);
+
+/* 
+function:	tanhf
+return: 	the arcsine evaluated at x.	
+expression: r = asin(x) 	
+*/
+float 		tanhf_c(float x);
+float 		tanhf_neon(float x);
 
 /* 
 function:	expf

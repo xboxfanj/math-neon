@@ -46,14 +46,14 @@ int main(int argc, char** argv){
 	float emax = 0;
 	float erms = 0;
 	float xmax = 0;
-	for(x = -1; x < 1; x += 0.0001){
+	for(x = -1; x < 1; x += 0.01){
 		float r;
 		float rr;
 		float dr;
 		float e;
 		
-		r = acosf_c(x);
-		rr = acosf(x);
+		r = tanhf_c(x);
+		rr = tanhf(x);
 		dr = fabsf(rr - r);
 		if (fabs(rr) > 0.0){
 			e = (100 * dr) / rr;
@@ -73,3 +73,4 @@ int main(int argc, char** argv){
 	printf("RMS Error %f \n", sqrtf(erms / n));
 	return 0;
 } 
+
