@@ -63,7 +63,7 @@ float tanf_c(float x){
 	//cosine
 	c.f = 1.0 - r * r;
 	
-	//fast sqrt approximation (2x newton iterations)
+	//fast invsqrt approximation (2x newton iterations)
     cc = c.f;
 	c.i = 0x5F3759DF - (c.i >> 1);		//VRSQRTE
 	cx = cc * c.f;

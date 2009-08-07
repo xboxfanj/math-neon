@@ -33,7 +33,7 @@ const float __sinfv_lut[4] = {
 	+0.99999661f,	//p1
 };
 
-void sinfv_c(float *r, float *x, int n)
+void sinfv_c(float *x, int n, float *r)
 {
 	union {
 		float 	f;
@@ -45,12 +45,13 @@ void sinfv_c(float *r, float *x, int n)
 
 	if (n & 0x1) {
 		*r++ = sinf_c(*x++);
+		n--;
 	}
 
 	float rng0 = __sinfv_rng[0];
 	float rng1 = __sinfv_rng[1];
 
-	while(n > 1){
+	while(n > 0){
 		
 		float x0 = *x++;
 		float x1 = *x++;
@@ -92,7 +93,7 @@ void sinfv_c(float *r, float *x, int n)
 	
 }
 
-void sinfv_neon(float *r, float *x, int n)
+void sinfv_neon(float *x, int n, float *r)
 {
 #ifdef __MATH_NEON
 	asm volatile (""
@@ -100,6 +101,6 @@ void sinfv_neon(float *r, float *x, int n)
 	:"r"(x), "r"(n)
 	);
 #else
-	sinfv_c(r, x, n);
+	sinfv_c(x, n, r);
 #endif
 }

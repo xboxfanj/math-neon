@@ -37,7 +37,7 @@ const float __sincosf_lut[8] = {
 	+0.99999661f,	//p1
 };
 
-void sincosf_c(float r[2], float x)
+void sincosf_c( float x, float r[2])
 {
 	union {
 		float 	f;
@@ -92,7 +92,7 @@ void sincosf_c(float r[2], float x)
 
 }
 
-void sincosf_neon(float r[2], float x)
+void sincosf_neon(float x, float r[2])
 {
 
 //HACK: Assumes for softfp that r1 = x, and for hardfp that s0 = x.
@@ -103,7 +103,7 @@ void sincosf_neon(float r[2], float x)
 #if (__MATH_FPABI == 1)
 	"vdup.f32 		d1, d0[0]				\n\t"	//d1 = {x, x}
 #else
-	"vdup.f32 		d1, r1					\n\t"	//d1 = {x, x}
+	"vdup.f32 		d1, r0					\n\t"	//d1 = {x, x}
 #endif
 	"vld1.32 		d3, [%1]				\n\t"	//d3 = {invrange, range}
 	"vadd.f32 		d0, d1, d3				\n\t"	//d0 = d1 + d3
@@ -148,6 +148,6 @@ void sincosf_neon(float r[2], float x)
     : "d0", "d1", "d2", "d3", "d4", "d5"
 	);
 #else
-	sincosf_c(r, x);
+	sincosf_c(x, r);
 #endif
 }
