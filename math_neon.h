@@ -102,6 +102,23 @@ float 		atan2f_c(float y, float x);
 float 		atan2f_neon(float y, float x);
 
 /* 
+function:	asinf
+return: 	the arcsine evaluated at x.	
+expression: r = asin(x) 	
+*/
+float 		asinf_c(float x);
+float 		asinf_neon(float x);
+
+/* 
+function:	acosf
+return: 	the arcsine evaluated at x.	
+expression: r = asin(x) 	
+*/
+float 		acosf_c(float x);
+float 		acosf_neon(float x);
+
+
+/* 
 function:	expf
 return: 	the natural exponential evaluated at x.	
 expression: r = e ** x	

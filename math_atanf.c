@@ -90,7 +90,7 @@ float atanf_neon(float x)
 
 	"vdup.f32	 	d4, %1					\n\t"	//d4 = {pi/2, pi/2};
 	"vmov.f32	 	d6, d0					\n\t"	//d6 = d0;
-	"vabs.f32	 	d0, d0					\n\t"	//d0 = fabs(d0);
+	"vabs.f32	 	d0, d0					\n\t"	//d0 = fabs(d0) ;
 
 	//fast reciporical approximation
 	"vrecpe.f32		d1, d0					\n\t"	//d1 = ~ 1 / d0; 

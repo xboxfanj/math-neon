@@ -46,14 +46,14 @@ int main(int argc, char** argv){
 	float emax = 0;
 	float erms = 0;
 	float xmax = 0;
-	for(x = 1; x < 10000; x += 1){
+	for(x = -1; x < 1; x += 0.0001){
 		float r;
 		float rr;
 		float dr;
 		float e;
 		
-		r = log10f_c(x);
-		rr = log10f(x);
+		r = acosf_c(x);
+		rr = acosf(x);
 		dr = fabsf(rr - r);
 		if (fabs(rr) > 0.0){
 			e = (100 * dr) / rr;
@@ -61,7 +61,7 @@ int main(int argc, char** argv){
 				emax = e;
 				xmax = x;
 			}
-				n++;
+			n++;
 			erms += e * e;
 		}else{
 			e = 0;
