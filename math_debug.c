@@ -21,6 +21,81 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "math_neon.h"
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
+
+struct	test_s {
+	const char*	name;
+	float 		(*func)(float);	//the function
+	float 		(*bench)(float);	//the function to benchmark against.
+	float 		rng0, rng1;
+	int			num;
+	float 		emax;				//maximum error
+	float 		xmax;				//location of maximum error
+	int			time;				//time to execute num functions;
+};
+
+typedef struct test_s test_t;
+
+test_t test[32] = {
+	{"sinf       ", 	sinf, 		sinf, 	-M_PI, 		M_PI, 	1000000, 0, 0, 0},
+	{"sinf_c     ", 	sinf_c, 	sinf, 	-M_PI, 		M_PI, 	1000000, 0, 0, 0},
+	{"sinf_neon  ", 	sinf_neon, 	sinf, 	-M_PI, 		M_PI, 	1000000, 0, 0, 0},
+	{"tanf       ", 	tanf, 		tanf, 	-M_PI_2, 	M_PI_2, 1000000, 0, 0, 0},
+	{"tanf_c     ", 	tanf_c, 	tanf, 	-M_PI_2, 	M_PI_2, 1000000, 0, 0, 0},
+	{"tanf_neon  ", 	tanf_neon, 	tanf, 	-M_PI_2, 	M_PI_2, 1000000, 0, 0, 0},
+	{"expf       ", 	expf, 		expf, 	0, 			50, 	1000000, 0, 0, 0},
+	{"expf_c     ", 	expf_c, 	expf, 	0, 			50, 	1000000, 0, 0, 0},
+	{"expf_neon  ",		expf_neon, 	expf, 	0, 			50, 	1000000, 0, 0, 0},
+	{"logf       ", 	logf, 		logf, 	1, 			10000, 	1000000, 0, 0, 0},
+	{"logf_c     ", 	logf_c, 	logf, 	1, 			10000, 	1000000, 0, 0, 0},
+	{"logf_neon  ",		logf_neon, 	logf, 	1, 			10000, 	1000000, 0, 0, 0},
+	{"floorf     ", 	floorf, 	floorf, 1, 			10000, 	1000000, 0, 0, 0},
+	{"floorf_c   ", 	floorf_c, 	floorf, 1, 			10000, 	1000000, 0, 0, 0},
+	{"floorf_neon",		floorf_neon,floorf, 1, 			10000, 	1000000, 0, 0, 0},
+	{"sqrtf      ", 	sqrtf, 		sqrtf, 	1, 			10000, 	1000000, 0, 0, 0},
+	{"sqrtf_c    ", 	sqrtf_c, 	sqrtf, 	1, 			10000, 	1000000, 0, 0, 0},
+	{"sqrtf_neon ",		sqrtf_neon,	sqrtf, 	1, 			10000, 	1000000, 0, 0, 0},
+	{"atanf      ", 	atanf, 		atanf, 	-1, 		1, 		1000000, 0, 0, 0},
+	{"atanf_c    ", 	atanf_c, 	atanf, 	-1, 		1,	 	1000000, 0, 0, 0},
+	{"atanf_neon ",		atanf_neon,	atanf, 	-1, 		1, 		1000000, 0, 0, 0},
+};
+
+
+void 
+test_mathfunc(test_t *tst){
+
+	struct rusage ru;
+	float x;
+	float dx = (tst->rng1 - tst->rng0) / (tst->num);
+
+
+	tst->emax = 0;
+	tst->xmax = 0;
+	for(x = tst->rng0; x < tst->rng1 ; x += dx){	
+		float r = (*tst->func)(x);
+		float rr = (*tst->bench)(x);
+		float dr = fabs(r - rr) * (100 / rr);
+		if (dr > tst->emax && rr > 0.001){
+			tst->emax = dr;
+			tst->xmax = x;
+		}
+	}
+
+	getrusage(RUSAGE_SELF, &ru);	
+	tst->time = -ru.ru_utime.tv_sec * 1000000 - ru.ru_utime.tv_usec;
+
+	for(x = tst->rng0; x < tst->rng1 ; x += dx){	
+		(*tst->func)(x);
+	}
+
+	getrusage(RUSAGE_SELF, &ru);	
+	tst->time += ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	
+}
+
 
 void enable_runfast()
 {
@@ -39,38 +114,27 @@ void enable_runfast()
 #endif
 }
 
-int main(int argc, char** argv){
-		
-	float x, y, p;
-	int n = 0;
-	float emax = 0;
-	float erms = 0;
-	float xmax = 0;
-	for(x = -1; x < 1; x += 0.01){
-		float r;
-		float rr;
-		float dr;
-		float e;
-		
-		r = tanhf_c(x);
-		rr = tanhf(x);
-		dr = fabsf(rr - r);
-		if (fabs(rr) > 0.0){
-			e = (100 * dr) / rr;
-			if (e>emax) {
-				emax = e;
-				xmax = x;
-			}
-			n++;
-			erms += e * e;
-		}else{
-			e = 0;
-		}
-		printf("x=%f \t r=%f \t rr=%f \t e=%f \n", x, r, rr, e);
+int main(int argc, char** argv)
+{
+
+	int i;
+	
+	if (argc > 1 && strcmp(argv[1], "-norunfast") == 0){
+		printf("RUNFAST: Disabled \n");
+	}else {
+		printf("RUNFAST: Enabled \n");
+		enable_runfast();
 	}
-	printf("\n");
-	printf("Max Error %f at x = %f \n", emax, xmax);
-	printf("RMS Error %f \n", sqrtf(erms / n));
+	
+	printf("Function\tRange\t\tNumber\tMax Error\tTime\n");	
+	printf("----------------------------------------------------------------\n");	
+	for(i = 0; i < 21; i++){
+		test_mathfunc(&test[i]);	
+		printf("%s\t[%.2f, %.2f]\t%i\t%.2e\t%i\n", test[i].name,  test[i].rng0, test[i].rng1, 
+			test[i].num, test[i].emax,   test[i].time);
+	}
+	printf("----------------------------------------------------------------\n");	
+	
 	return 0;
 } 
 

@@ -32,8 +32,8 @@ Based on:
 
 Test func : expf(x)
 Test Range: 0 < x < 50
-Peak Error:	~0.000024%
-RMS  Error: ~0.000007%
+Peak Error:	~0.00024%
+RMS  Error: ~0.00007%
 */
 
 

@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define __MATH_NEON			
 
 //Floating Point value ABI 0=softfp, 1=hardfp. Only effects ASM routines.
-#define __MATH_FPABI 	1	
+#define __MATH_FPABI 	0	
 
 #endif
 
