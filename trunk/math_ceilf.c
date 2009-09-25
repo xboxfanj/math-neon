@@ -48,10 +48,10 @@ float ceilf_neon(float x)
 	"vcvt.f32.s32 	d1, d1					\n\t"	//d1 = (float) d1;
 	"vcgt.f32 		d0, d0, d1				\n\t"	//d0 = (d0 > d1);
 	"vcvt.f32.u32 	d0, d0					\n\t"	//d0 = (float) d0;
-	"vadd.f32 		d0, d1, d0				\n\t"	//d0 = d1 + d0;
+	"vadd.f32 		d1, d1, d0				\n\t"	//d1 = d1 + d0;
 
 #if (__MATH_FPABI != 1)
-	"vmov.f32 		r0, s0					\n\t"	//r0 = d0[0];
+	"vmov.f32 		r0, s2					\n\t"	//r1 = d1[0];
 #endif
 
 	::: "d0", "d1"
