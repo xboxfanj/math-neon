@@ -22,11 +22,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#ifdef WIN32
+#include <windows.h>
+#else
 #include <sys/time.h>
 #include <sys/resource.h>
+#endif
 
-
-struct	test_s {
+struct	test1_s {
 	const char*	name;
 	float 		(*func)(float);	//the function
 	float 		(*bench)(float);	//the function to benchmark against.
@@ -37,40 +40,176 @@ struct	test_s {
 	int			time;				//time to execute num functions;
 };
 
-typedef struct test_s test_t;
-
-test_t test[32] = {
-	{"sinf       ", 	sinf, 		sinf, 	-M_PI, 		M_PI, 	1000000, 0, 0, 0},
-	{"sinf_c     ", 	sinf_c, 	sinf, 	-M_PI, 		M_PI, 	1000000, 0, 0, 0},
-	{"sinf_neon  ", 	sinf_neon, 	sinf, 	-M_PI, 		M_PI, 	1000000, 0, 0, 0},
-	{"tanf       ", 	tanf, 		tanf, 	-M_PI_2, 	M_PI_2, 1000000, 0, 0, 0},
-	{"tanf_c     ", 	tanf_c, 	tanf, 	-M_PI_2, 	M_PI_2, 1000000, 0, 0, 0},
-	{"tanf_neon  ", 	tanf_neon, 	tanf, 	-M_PI_2, 	M_PI_2, 1000000, 0, 0, 0},
-	{"expf       ", 	expf, 		expf, 	0, 			50, 	1000000, 0, 0, 0},
-	{"expf_c     ", 	expf_c, 	expf, 	0, 			50, 	1000000, 0, 0, 0},
-	{"expf_neon  ",		expf_neon, 	expf, 	0, 			50, 	1000000, 0, 0, 0},
-	{"logf       ", 	logf, 		logf, 	1, 			10000, 	1000000, 0, 0, 0},
-	{"logf_c     ", 	logf_c, 	logf, 	1, 			10000, 	1000000, 0, 0, 0},
-	{"logf_neon  ",		logf_neon, 	logf, 	1, 			10000, 	1000000, 0, 0, 0},
-	{"floorf     ", 	floorf, 	floorf, 1, 			10000, 	1000000, 0, 0, 0},
-	{"floorf_c   ", 	floorf_c, 	floorf, 1, 			10000, 	1000000, 0, 0, 0},
-	{"floorf_neon",		floorf_neon,floorf, 1, 			10000, 	1000000, 0, 0, 0},
-	{"sqrtf      ", 	sqrtf, 		sqrtf, 	1, 			10000, 	1000000, 0, 0, 0},
-	{"sqrtf_c    ", 	sqrtf_c, 	sqrtf, 	1, 			10000, 	1000000, 0, 0, 0},
-	{"sqrtf_neon ",		sqrtf_neon,	sqrtf, 	1, 			10000, 	1000000, 0, 0, 0},
-	{"atanf      ", 	atanf, 		atanf, 	-1, 		1, 		1000000, 0, 0, 0},
-	{"atanf_c    ", 	atanf_c, 	atanf, 	-1, 		1,	 	1000000, 0, 0, 0},
-	{"atanf_neon ",		atanf_neon,	atanf, 	-1, 		1, 		1000000, 0, 0, 0},
+struct	test2_s {
+	const char*	name;
+	float 		(*func)(float, float);	//the function
+	float 		(*bench)(float, float);	//the function to benchmark against.
+	float 		rng0, rng1;
+	int			num;
+	float 		emax;				//maximum error
+	float 		xmax;				//location of maximum error
+	int			time;				//time to execute num functions;
 };
 
 
+typedef struct test1_s test1_t;
+typedef struct test2_s test2_t;
+
+test1_t test1[45] = 
+{
+	{"sinf       ", 	sinf, 		sinf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"sinf_c     ", 	sinf_c, 	sinf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"sinf_neon  ", 	sinf_neon, 	sinf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	
+	{"cosf       ", 	cosf, 		cosf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"cosf_c     ", 	cosf_c, 	cosf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"cosf_neon  ", 	cosf_neon, 	cosf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+
+	{"tanf       ", 	tanf, 		tanf, 	-M_PI_4, 	M_PI_4, 500000, 0, 0, 0},
+	{"tanf_c     ", 	tanf_c, 	tanf, 	-M_PI_4, 	M_PI_4, 500000, 0, 0, 0},
+	{"tanf_neon  ", 	tanf_neon, 	tanf, 	-M_PI_4, 	M_PI_4, 500000, 0, 0, 0},
+
+	{"asinf      ", 	asinf, 		asinf, 	-1, 		1, 		500000, 0, 0, 0},
+	{"asinf_c    ", 	asinf_c, 	asinf, 	-1, 		1,	 	500000, 0, 0, 0},
+	{"asinf_neon ",		asinf_neon,	asinf, 	-1, 		1, 		500000, 0, 0, 0},
+	
+	{"acosf      ", 	acosf, 		acosf, 	-1, 		1, 		500000, 0, 0, 0},
+	{"acosf_c    ", 	acosf_c, 	acosf, 	-1, 		1,	 	500000, 0, 0, 0},
+	{"acosf_neon ",		acosf_neon,	acosf, 	-1, 		1, 		500000, 0, 0, 0},
+	
+	{"atanf      ", 	atanf, 		atanf, 	-1, 		1, 		500000, 0, 0, 0},
+	{"atanf_c    ", 	atanf_c, 	atanf, 	-1, 		1,	 	500000, 0, 0, 0},
+	{"atanf_neon ",		atanf_neon,	atanf, 	-1, 		1, 		500000, 0, 0, 0},
+
+	{"sinhf       ", 	sinhf, 		sinhf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"sinhf_c     ", 	sinhf_c, 	sinhf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"sinhf_neon  ", 	sinhf_neon, sinhf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	
+	{"coshf       ", 	coshf, 		coshf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"coshf_c     ", 	coshf_c, 	coshf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"coshf_neon  ", 	coshf_neon, coshf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+
+	{"tanhf       ", 	tanhf, 		tanhf, 	-M_PI_4, 	M_PI_4, 500000, 0, 0, 0},
+	{"tanhf_c     ", 	tanhf_c, 	tanhf, 	-M_PI_4, 	M_PI_4, 500000, 0, 0, 0},
+	{"tanhf_neon  ", 	tanhf_neon, tanhf, 	-M_PI_4, 	M_PI_4, 500000, 0, 0, 0},
+
+	{"expf       ", 	expf, 		expf, 	0, 			50, 	500000, 0, 0, 0},
+	{"expf_c     ", 	expf_c, 	expf, 	0, 			50, 	500000, 0, 0, 0},
+	{"expf_neon  ",		expf_neon, 	expf, 	0, 			50, 	500000, 0, 0, 0},
+	
+	{"logf       ", 	logf, 		logf, 	1, 			1000, 	500000, 0, 0, 0},
+	{"logf_c     ", 	logf_c, 	logf, 	1, 			1000, 	500000, 0, 0, 0},
+	{"logf_neon  ",		logf_neon, 	logf, 	1, 			1000, 	500000, 0, 0, 0},
+
+	{"log10f       ", 	log10f, 	log10f, 1, 			1000, 	500000, 0, 0, 0},
+	{"log10f_c     ", 	log10f_c, 	log10f, 1, 			1000, 	500000, 0, 0, 0},
+	{"log10f_neon  ",	log10f_neon,log10f, 1, 			1000, 	500000, 0, 0, 0},
+
+	{"floorf     ", 	floorf, 	floorf, 1, 			1000, 	500000, 0, 0, 0},
+	{"floorf_c   ", 	floorf_c, 	floorf, 1, 			1000, 	500000, 0, 0, 0},
+	{"floorf_neon",		floorf_neon,floorf, 1, 			1000, 	500000, 0, 0, 0},
+
+	{"ceilf     ", 		ceilf, 		ceilf, 	1, 			1000, 	500000, 0, 0, 0},
+	{"ceilf_c   ", 		ceilf_c, 	ceilf, 	1, 			1000, 	500000, 0, 0, 0},
+	{"ceilf_neon",		ceilf_neon,	ceilf, 	1, 			1000, 	500000, 0, 0, 0},
+	
+	{"sqrtf      ", 	sqrtf, 		sqrtf, 	1, 			1000, 	500000, 0, 0, 0},
+	{"sqrtf_c    ", 	sqrtf_c, 	sqrtf, 	1, 			1000, 	500000, 0, 0, 0},
+	{"sqrtf_neon ",		sqrtf_neon,	sqrtf, 	1, 			1000, 	500000, 0, 0, 0},
+};
+
+test1_t test2[45] = 
+{
+	{"atan2f       ", 	atan2f, 	atan2f, -10, 		10, 	500000, 0, 0, 0},
+	{"atan2f_c     ", 	atan2f_c, 	atan2f, -10, 		10, 	500000, 0, 0, 0},
+	{"atan2f_neon  ", 	atan2f_neon,atan2f, -10, 		10, 	500000, 0, 0, 0},
+	
+	{"powf       ", 	powf, 		powf, 	-10, 		10, 	500000, 0, 0, 0},
+	{"powf_c     ", 	powf_c, 	powf, 	-10, 		10, 	500000, 0, 0, 0},
+	{"powf_neon  ", 	powf_neon, 	powf, 	-10, 		10, 	500000, 0, 0, 0},
+
+	{"fmodf       ", 	fmodf, 		fmodf, 	1, 			10, 	500000, 0, 0, 0},
+	{"fmodf_c     ", 	fmodf_c, 	fmodf, 	1, 			10, 	500000, 0, 0, 0},
+	{"fmodf_neon  ", 	fmodf_neon, fmodf, 	1, 			10, 	500000, 0, 0, 0},
+
+};
+
+
+#ifdef WIN32
+
 void 
-test_mathfunc(test_t *tst){
+test_mathfunc1(test1_t *tst)
+{
+
+	float x;
+	float dx = (tst->rng1 - tst->rng0) / (tst->num);
+
+	tst->emax = 0;
+	tst->xmax = 0;
+	for(x = tst->rng0; x < tst->rng1 ; x += dx){	
+		float r = (tst->func)(x);
+		float rr = (tst->bench)(x);
+		float dr = fabs(r - rr) * (100 / rr);
+		if (dr > tst->emax && rr > 0.001){
+			tst->emax = dr;
+			tst->xmax = x;
+		}
+	}
+
+	tst->time = GetTickCount()*1000 ;
+
+	for(x = tst->rng0; x < tst->rng1 ; x += dx){	
+		(tst->func)(x);
+	}
+
+	tst->time = (GetTickCount()*1000) - tst->time;
+
+}
+
+void 
+test_mathfunc2(test2_t *tst)
+{
+
+	float x, y;
+	float dx = (tst->rng1 - tst->rng0) * (tst->rng1 - tst->rng0) / (tst->num);
+
+	tst->emax = 0;
+	tst->xmax = 0;
+	
+	for(y = tst->rng0; y < tst->rng1 ; y += dx){	
+		for(x = tst->rng0; x < tst->rng1 ; x += dx){	
+			float r = (tst->func)(x, y);
+			float rr = (tst->bench)(x, y);
+			float dr = fabs(r - rr) * (100 / rr);
+			if (dr > tst->emax && rr > 0.001){
+				tst->emax = dr;
+				tst->xmax = x;
+			}
+		}
+	}
+	
+	tst->time = GetTickCount()*1000 ;
+
+	for(y = tst->rng0; y < tst->rng1 ; y += dx){	
+		for(x = tst->rng0; x < tst->rng1 ; x += dx){	
+			(tst->func)(x, y);
+		}
+	}
+
+	tst->time = (GetTickCount()*1000) - tst->time;
+
+}
+
+
+#else
+
+void 
+test_mathfunc1(test1_t *tst)
+{
 
 	struct rusage ru;
 	float x;
 	float dx = (tst->rng1 - tst->rng0) / (tst->num);
-
 
 	tst->emax = 0;
 	tst->xmax = 0;
@@ -96,6 +235,7 @@ test_mathfunc(test_t *tst){
 	
 }
 
+#endif
 
 void enable_runfast()
 {
@@ -117,23 +257,52 @@ void enable_runfast()
 int main(int argc, char** argv)
 {
 
-	int i;
-	
+	int i, ii;
+
+#ifndef WIN32
 	if (argc > 1 && strcmp(argv[1], "-norunfast") == 0){
 		printf("RUNFAST: Disabled \n");
 	}else {
 		printf("RUNFAST: Enabled \n");
 		enable_runfast();
 	}
-	
-	printf("Function\tRange\t\tNumber\tMax Error\tTime\n");	
-	printf("----------------------------------------------------------------\n");	
-	for(i = 0; i < 21; i++){
-		test_mathfunc(&test[i]);	
-		printf("%s\t[%.2f, %.2f]\t%i\t%.2e\t%i\n", test[i].name,  test[i].rng0, test[i].rng1, 
-			test[i].num, test[i].emax,   test[i].time);
+#endif	
+
+#if 1
+
+	//test single argument functions:
+	printf("Function\tRange\t\tNumber\tMax Error\tRate\n");	
+	printf("-------------------------------------------------------------------------\n");	
+	for(i = 0; i < 45; i++){
+		test_mathfunc1(&test1[i]);	
+		
+		ii = i - (i % 3);
+		
+		printf("%s\t[%.2f, %.2f]\t%i\t%.2e%%\t%.2f%%\n", test1[i].name,  test1[i].rng0, test1[i].rng1, 
+			test1[i].num, test1[i].emax, 100.0f * (float)test1[ii].time / test1[i].time);
 	}
-	printf("----------------------------------------------------------------\n");	
+#if 0
+	for(i = 0; i < 9; i++){
+		test_mathfunc2(&test2[i]);
+	
+		ii = i - (i % 3);
+		
+		printf("%s\t[%.2f, %.2f]\t%i\t%.2e%%\t%.2f%%\n", test2[i].name,  test2[i].rng0, test2[i].rng1, 
+			test2[i].num, test2[i].emax, 100.0f * (float)test2[ii].time / test2[i].time);
+	}
+#endif
+	printf("--------------------------------------------------------------------------\n");	
+
+#else
+
+	float x = 0;
+	for(x = -M_PI_2; x < M_PI_2; x+= 0.01)
+	{
+		printf("x=%.2f\t in=%.2f\t neon=%.2f \n", x, tanf(x), tanf_neon(x));
+	
+	}
+	
+#endif
 	
 	return 0;
 } 

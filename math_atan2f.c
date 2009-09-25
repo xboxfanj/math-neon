@@ -155,3 +155,11 @@ float atan2f_c(float y, float x)
 	return r;
 }
 
+float atan2f_neon(float y, float x)
+{
+#ifdef __MATH_NEON
+	asm volatile ("");
+#else
+	return atan2f_c(y, x);
+#endif
+}

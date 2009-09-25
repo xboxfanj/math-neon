@@ -18,20 +18,20 @@ License along with this library; if not, write to the Free
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "math.h"
+#include <math.h>
 #include "math_neon.h"
 
 static const float __sinf_rng[2] = {
 	2.0 / M_PI,
 	M_PI / 2.0
-};
+} ALIGN(16);
 
 static const float __sinf_lut[4] = {
 	-0.00018365f,	//p7
 	-0.16664831f,	//p3
 	+0.00830636f,	//p5
 	+0.99999661f,	//p1
-};
+} ALIGN(16);
 
 float sinf_c(float x)
 {
@@ -123,14 +123,3 @@ float sinf_neon(float x)
 	return sinf_c(x);
 #endif
 }
-
-float cosf_c(float x)
-{
-	return sinf_c(x + M_PI_2);
-}
-
-float cosf_neon(float x)
-{
-	return sinf_neon(x + M_PI_2);
-}
-
