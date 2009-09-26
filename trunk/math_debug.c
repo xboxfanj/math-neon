@@ -55,7 +55,7 @@ struct	test2_s {
 typedef struct test1_s test1_t;
 typedef struct test2_s test2_t;
 
-test1_t test1[45] = 
+test1_t test1[48] = 
 {
 	{"sinf       ", 	sinf, 		sinf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
 	{"sinf_c     ", 	sinf_c, 	sinf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
@@ -112,30 +112,33 @@ test1_t test1[45] =
 	{"ceilf     ", 		ceilf, 		ceilf, 	1, 			1000, 	500000, 0, 0, 0},
 	{"ceilf_c   ", 		ceilf_c, 	ceilf, 	1, 			1000, 	500000, 0, 0, 0},
 	{"ceilf_neon",		ceilf_neon,	ceilf, 	1, 			1000, 	500000, 0, 0, 0},
+
+	{"fabsf     ", 		fabsf, 		fabsf, 	1, 			1000, 	500000, 0, 0, 0},
+	{"fabsf_c   ", 		fabsf_c, 	fabsf, 	1, 			1000, 	500000, 0, 0, 0},
+	{"fabsf_neon",		fabsf_neon,	fabsf, 	1, 			1000, 	500000, 0, 0, 0},
+
 	
 	{"sqrtf      ", 	sqrtf, 		sqrtf, 	1, 			1000, 	500000, 0, 0, 0},
 	{"sqrtf_c    ", 	sqrtf_c, 	sqrtf, 	1, 			1000, 	500000, 0, 0, 0},
 	{"sqrtf_neon ",		sqrtf_neon,	sqrtf, 	1, 			1000, 	500000, 0, 0, 0},
 };
 
-test1_t test2[45] = 
+test2_t test2[9] = 
 {
-	{"atan2f       ", 	atan2f, 	atan2f, -10, 		10, 	500000, 0, 0, 0},
-	{"atan2f_c     ", 	atan2f_c, 	atan2f, -10, 		10, 	500000, 0, 0, 0},
-	{"atan2f_neon  ", 	atan2f_neon,atan2f, -10, 		10, 	500000, 0, 0, 0},
+	{"atan2f       ", 	atan2f, 	atan2f, 0.1, 		10, 	10000, 0, 0, 0},
+	{"atan2f_c     ", 	atan2f_c, 	atan2f, 0.1, 		10, 	10000, 0, 0, 0},
+	{"atan2f_neon  ", 	atan2f_neon,atan2f, 0.1, 		10, 	10000, 0, 0, 0},
 	
-	{"powf       ", 	powf, 		powf, 	-10, 		10, 	500000, 0, 0, 0},
-	{"powf_c     ", 	powf_c, 	powf, 	-10, 		10, 	500000, 0, 0, 0},
-	{"powf_neon  ", 	powf_neon, 	powf, 	-10, 		10, 	500000, 0, 0, 0},
+	{"powf       ", 	powf, 		powf, 	1, 			10, 	10000, 0, 0, 0},
+	{"powf_c     ", 	powf_c, 	powf, 	1, 			10, 	10000, 0, 0, 0},
+	{"powf_neon  ", 	powf_neon, 	powf, 	1, 			10, 	10000, 0, 0, 0},
 
-	{"fmodf       ", 	fmodf, 		fmodf, 	1, 			10, 	500000, 0, 0, 0},
-	{"fmodf_c     ", 	fmodf_c, 	fmodf, 	1, 			10, 	500000, 0, 0, 0},
-	{"fmodf_neon  ", 	fmodf_neon, fmodf, 	1, 			10, 	500000, 0, 0, 0},
+	{"fmodf       ", 	fmodf, 		fmodf, 	1, 			10, 	10000, 0, 0, 0},
+	{"fmodf_c     ", 	fmodf_c, 	fmodf, 	1, 			10, 	10000, 0, 0, 0},
+	{"fmodf_neon  ", 	fmodf_neon, fmodf, 	1, 			10, 	10000, 0, 0, 0},
 
 };
 
-
-#ifdef WIN32
 
 void 
 test_mathfunc1(test1_t *tst)
@@ -155,29 +158,39 @@ test_mathfunc1(test1_t *tst)
 			tst->xmax = x;
 		}
 	}
-
+	
+#ifdef WIN32
 	tst->time = GetTickCount()*1000 ;
+#else
+	getrusage(RUSAGE_SELF, &ru);	
+	tst->time = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+#endif
 
 	for(x = tst->rng0; x < tst->rng1 ; x += dx){	
 		(tst->func)(x);
 	}
 
-	tst->time = (GetTickCount()*1000) - tst->time;
+#ifdef WIN32
+	tst->time = GetTickCount()*1000 - tst->time;
+#else
+	getrusage(RUSAGE_SELF, &ru);	
+	tst->time = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec - tst->time;
+#endif
 
 }
 
-void 
+void
 test_mathfunc2(test2_t *tst)
 {
-
 	float x, y;
-	float dx = (tst->rng1 - tst->rng0) * (tst->rng1 - tst->rng0) / (tst->num);
+	float rng = tst->rng1 - tst->rng0;
+	float d = (rng * rng) / ((float) tst->num);
 
 	tst->emax = 0;
 	tst->xmax = 0;
 	
-	for(y = tst->rng0; y < tst->rng1 ; y += dx){	
-		for(x = tst->rng0; x < tst->rng1 ; x += dx){	
+	for(y = (tst->rng0); y < (tst->rng1) ; y += d){	
+		for(x = (tst->rng0); x < (tst->rng1); x += d){	
 			float r = (tst->func)(x, y);
 			float rr = (tst->bench)(x, y);
 			float dr = fabs(r - rr) * (100 / rr);
@@ -188,54 +201,28 @@ test_mathfunc2(test2_t *tst)
 		}
 	}
 	
+#ifdef WIN32
 	tst->time = GetTickCount()*1000 ;
+#else
+	getrusage(RUSAGE_SELF, &ru);	
+	tst->time = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+#endif
 
-	for(y = tst->rng0; y < tst->rng1 ; y += dx){	
-		for(x = tst->rng0; x < tst->rng1 ; x += dx){	
+	for(y = tst->rng0; y < tst->rng1 ; y += d){	
+		for(x = tst->rng0; x < tst->rng1 ; x += d){	
 			(tst->func)(x, y);
 		}
 	}
 
-	tst->time = (GetTickCount()*1000) - tst->time;
-
-}
-
-
+#ifdef WIN32
+	tst->time = GetTickCount()*1000 - tst->time;
 #else
-
-void 
-test_mathfunc1(test1_t *tst)
-{
-
-	struct rusage ru;
-	float x;
-	float dx = (tst->rng1 - tst->rng0) / (tst->num);
-
-	tst->emax = 0;
-	tst->xmax = 0;
-	for(x = tst->rng0; x < tst->rng1 ; x += dx){	
-		float r = (*tst->func)(x);
-		float rr = (*tst->bench)(x);
-		float dr = fabs(r - rr) * (100 / rr);
-		if (dr > tst->emax && rr > 0.001){
-			tst->emax = dr;
-			tst->xmax = x;
-		}
-	}
-
 	getrusage(RUSAGE_SELF, &ru);	
-	tst->time = -ru.ru_utime.tv_sec * 1000000 - ru.ru_utime.tv_usec;
+	tst->time = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec - tst->time;
+#endif
 
-	for(x = tst->rng0; x < tst->rng1 ; x += dx){	
-		(*tst->func)(x);
-	}
-
-	getrusage(RUSAGE_SELF, &ru);	
-	tst->time += ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
-	
 }
 
-#endif
 
 void enable_runfast()
 {
@@ -273,7 +260,7 @@ int main(int argc, char** argv)
 	//test single argument functions:
 	printf("Function\tRange\t\tNumber\tMax Error\tRate\n");	
 	printf("-------------------------------------------------------------------------\n");	
-	for(i = 0; i < 45; i++){
+	for(i = 0; i < 48; i++){
 		test_mathfunc1(&test1[i]);	
 		
 		ii = i - (i % 3);
@@ -281,7 +268,6 @@ int main(int argc, char** argv)
 		printf("%s\t[%.2f, %.2f]\t%i\t%.2e%%\t%.2f%%\n", test1[i].name,  test1[i].rng0, test1[i].rng1, 
 			test1[i].num, test1[i].emax, 100.0f * (float)test1[ii].time / test1[i].time);
 	}
-#if 0
 	for(i = 0; i < 9; i++){
 		test_mathfunc2(&test2[i]);
 	
@@ -290,7 +276,6 @@ int main(int argc, char** argv)
 		printf("%s\t[%.2f, %.2f]\t%i\t%.2e%%\t%.2f%%\n", test2[i].name,  test2[i].rng0, test2[i].rng1, 
 			test2[i].num, test2[i].emax, 100.0f * (float)test2[ii].time / test2[i].time);
 	}
-#endif
 	printf("--------------------------------------------------------------------------\n");	
 
 #else

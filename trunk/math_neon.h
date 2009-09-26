@@ -211,6 +211,15 @@ float 		ceilf_c(float x);
 float 		ceilf_neon(float x);
 
 /* 
+function:	fabsf
+return: 	absolute vvalue of x	
+notes:		assumes |x| < 2 ** 31
+*/
+float 		fabsf_c(float x);
+float 		fabsf_neon(float x);
+
+
+/* 
 function:	ldexpf
 return: 	the value of m multiplied by 2 to the power of e. 
 expression: r = m * (2 ** e)
@@ -222,7 +231,6 @@ float 		ldexpf_neon(float m, int e);
 function:	frexpf
 return: 	the exponent and mantissa of x 
 */
-
 float 		frexpf_c(float x, int *e);
 float 		frexpf_neon(float x, int *e);
 
