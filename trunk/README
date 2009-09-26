@@ -10,12 +10,10 @@ with the aim of increasing the floating point performance of ARM Cortex A-8
 based platforms. As well as implementing the functions in ARM NEON assembly, 
 they sacrifice error checking and accuracy to achieve better performance.
 
-
-Function List:
-sinf, cosf, tanf, expf, logf,  asinf, acosf, atanf, atan2f, coshf, sinhf, tanhf, 
-
 Notes:
 	- The *_c functions are c implementations of the *_neon code.
 	- Like cmath, The errors present in the functions are very dependent on the 
 	  range which your operating in. So you should test them first.
-	-
+	- Look in the "math_neon.h" file for discriptions of the functions. In some 
+	  function files there are also notes on the specific implementation.
+	
