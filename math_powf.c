@@ -172,6 +172,6 @@ float powf_neon(float x, float n)
     : "d0", "d1", "q1", "q2", "d6", "d7"
 	);
 #else
-	return expf_c(x);
+	return powf_c(x, n);
 #endif
 }

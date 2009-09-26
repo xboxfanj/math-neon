@@ -18,28 +18,16 @@ License along with this library; if not, write to the Free
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "math.h"
 #include "math_neon.h"
- 
-float sinhf_c(float x)
+
+float cosf_c(float x)
 {
-	float a, b, xx;
-	xx = -x;
-	a = expf_c(x);
-	b = expf_c(xx);
-	a = a * 0.5f;
-	a = a - 0.5f * b;
-	return a;
+	return sinf_c(x + M_PI_2);
 }
 
-
-float sinhf_neon(float x)
+float cosf_neon(float x)
 {
-#ifdef __MATH_NEON
-	asm volatile (""
-	);
-#else
-	return sinhf_c(x);
-#endif
+	float xx = x + M_PI_2;
+	return sinf_neon(xx);
 }
 
