@@ -32,15 +32,23 @@ therefore m[2] = x2
 
 //matrix matrix multipication. d = m0 * m1;
 void
-math_mat3mul_c(float m0[9], float m1[9], float d[9])
+matmul3_c(float m0[9], float m1[9], float d[9])
 {
-
+	d[0] = m0[0]*m1[0] + m0[3]*m1[1] + m0[6]*m1[2];
+	d[1] = m0[1]*m1[0] + m0[4]*m1[1] + m0[7]*m1[2];
+	d[2] = m0[2]*m1[0] + m0[5]*m1[1] + m0[8]*m1[2];
+	d[3] = m0[0]*m1[3] + m0[3]*m1[4] + m0[6]*m1[5];
+	d[4] = m0[1]*m1[3] + m0[4]*m1[4] + m0[7]*m1[5];
+	d[5] = m0[2]*m1[3] + m0[5]*m1[4] + m0[8]*m1[5];
+	d[6] = m0[0]*m1[6] + m0[3]*m1[7] + m0[6]*m1[8];
+	d[7] = m0[1]*m1[6] + m0[4]*m1[7] + m0[7]*m1[8];
+	d[8] = m0[2]*m1[6] + m0[5]*m1[7] + m0[8]*m1[8];
 }
 
 
 //matrix vector multiplication. d = m * v
 void
-math_matvec3mul_c(float m[9], float v[3], float d[3])
+matvec3_c(float m[9], float v[3], float d[3])
 {
 	d[0] = m[0]*v[0] + m[3]*v[1] + m[6]*v[2];
 	d[1] = m[1]*v[0] + m[4]*v[1] + m[7]*v[2];
@@ -48,7 +56,7 @@ math_matvec3mul_c(float m[9], float v[3], float d[3])
 }
 
 void
-math_matvec3mul_neon(float m[9], float v[3], float d[3])
+matvec3_neon(float m[9], float v[3], float d[3])
 {
 #ifdef __MATH_NEON
 	int tmp;
@@ -70,6 +78,6 @@ math_matvec3mul_neon(float m[9], float v[3], float d[3])
     : "q0", "q9", "q10","q11", "q12", "q13"
 	);	
 #else
-	math_matvec3mul_c(m, v, d);
+	matvec3_c(m, v, d);
 #endif
 }

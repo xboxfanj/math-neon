@@ -16,4 +16,8 @@ Notes:
 	  range which your operating in. So you should test them first.
 	- Look in the "math_neon.h" file for discriptions of the functions. In some 
 	  function files there are also notes on the specific implementation.
+	- The *_neon functions make certain assumptions about the location of arguments 
+	  that is incompatible with inlining. 
+	  
+	
 	

@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //functions are rerouted to their equivalent *_c function.
 #define __MATH_NEON			
 
-//Floating Point value ABI 0=softfp, 1=hardfp. Only effects ASM routines.
+//Floating Point value ABI 0=softfp, 1=hardfp. Only effects *_neon routines.
 #define __MATH_FPABI 	0	
 
 #endif
@@ -52,6 +52,67 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define M_SQRT2		1.41421356237309504880	/* sqrt(2) */
 #define M_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
 #endif 
+
+/* 
+function:	enable_runfast
+			this function enables the floating point runfast mode on the 
+			ARM Cortex A8.  	
+*/
+void		enable_runfast();
+
+/* 
+function:	matmul2
+arguments:  m0 2x2 matrix, m1 2x2 matrix
+return: 	d 2x2 matrix
+expression: d = m0 * m1
+*/
+void		matmul2_c(float m0[4], float m1[4], float d[4]);
+void		matmul2_neon(float m0[4], float m1[4], float d[4]);
+
+/* 
+function:	matmul3
+arguments:  m0 3x3 matrix, m1 3x3 matrix
+return: 	d 3x3 matrix
+expression: d = m0 * m1
+*/
+void		matmul3_c(float m0[9], float m1[9], float d[9]);
+void		matmul3_neon(float m0[9], float m1[9], float d[9]);
+
+/* 
+function:	matmul4
+arguments:  m0 4x4 matrix, m1 4x4 matrix
+return: 	d 4x4 matrix
+expression: d = m0 * m1
+*/
+void		matmul4_c(float m0[16], float m1[16], float d[16]);
+void		matmul4_neon(float m0[16], float m1[16], float d[16]);
+\
+/* 
+function:	matvec2
+arguments:  m 2x2 matrix, v 2 element vector
+return: 	d 2x2 matrix
+expression: d = m * v
+*/
+void		matvec2_c(float m[4], float v[2], float d[2]);
+void		matvec2_neon(float m[4], float v[2], float d[2]);
+
+/* 
+function:	matvec3
+arguments:  m 3x3 matrix, v 3 element vector
+return: 	d 3x3 matrix
+expression: d = m * v
+*/
+void		matvec3_c(float m[9], float v[3], float d[3]);
+void		matvec3_neon(float m[9], float v[3], float d[3]);
+
+/* 
+function:	matvec4
+arguments:  m 4x4 matrix, v 4 element vector
+return: 	d 4x4 matrix
+expression: d = m * v
+*/
+void		matvec4_c(float m[16], float v[4], float d[4]);
+void		matvec4_neon(float m[16], float v[4], float d[4]);
 
 /* 
 function:	sinf
