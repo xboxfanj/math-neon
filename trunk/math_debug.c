@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <math.h>
 #include <time.h>
 #ifdef WIN32
-#include <windows.h>
+#include <time.h>
 #else
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -89,33 +89,33 @@ test1_t test1[48] =
 	{"coshf_c     ", 	coshf_c, 	coshf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
 	{"coshf_neon  ", 	coshf_neon, coshf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
 
-	{"tanhf       ", 	tanhf, 		tanhf, 	-M_PI_4, 	M_PI_4, 500000, 0, 0, 0},
-	{"tanhf_c     ", 	tanhf_c, 	tanhf, 	-M_PI_4, 	M_PI_4, 500000, 0, 0, 0},
-	{"tanhf_neon  ", 	tanhf_neon, tanhf, 	-M_PI_4, 	M_PI_4, 500000, 0, 0, 0},
+	{"tanhf       ", 	tanhf, 		tanhf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"tanhf_c     ", 	tanhf_c, 	tanhf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"tanhf_neon  ", 	tanhf_neon, tanhf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
 
 	{"expf       ", 	expf, 		expf, 	0, 			50, 	500000, 0, 0, 0},
 	{"expf_c     ", 	expf_c, 	expf, 	0, 			50, 	500000, 0, 0, 0},
 	{"expf_neon  ",		expf_neon, 	expf, 	0, 			50, 	500000, 0, 0, 0},
 	
-	{"logf       ", 	logf, 		logf, 	1, 			1000, 	500000, 0, 0, 0},
-	{"logf_c     ", 	logf_c, 	logf, 	1, 			1000, 	500000, 0, 0, 0},
-	{"logf_neon  ",		logf_neon, 	logf, 	1, 			1000, 	500000, 0, 0, 0},
+	{"logf       ", 	logf, 		logf, 	1, 			1000, 	5000000, 0, 0, 0},
+	{"logf_c     ", 	logf_c, 	logf, 	1, 			1000, 	5000000, 0, 0, 0},
+	{"logf_neon  ",		logf_neon, 	logf, 	1, 			1000, 	5000000, 0, 0, 0},
 
-	{"log10f       ", 	log10f, 	log10f, 1, 			1000, 	500000, 0, 0, 0},
-	{"log10f_c     ", 	log10f_c, 	log10f, 1, 			1000, 	500000, 0, 0, 0},
-	{"log10f_neon  ",	log10f_neon,log10f, 1, 			1000, 	500000, 0, 0, 0},
+	{"log10f       ", 	log10f, 	log10f, 1, 			1000, 	5000000, 0, 0, 0},
+	{"log10f_c     ", 	log10f_c, 	log10f, 1, 			1000, 	5000000, 0, 0, 0},
+	{"log10f_neon  ",	log10f_neon,log10f, 1, 			1000, 	5000000, 0, 0, 0},
 
-	{"floorf     ", 	floorf, 	floorf, 1, 			1000, 	500000, 0, 0, 0},
-	{"floorf_c   ", 	floorf_c, 	floorf, 1, 			1000, 	500000, 0, 0, 0},
-	{"floorf_neon",		floorf_neon,floorf, 1, 			1000, 	500000, 0, 0, 0},
+	{"floorf     ", 	floorf, 	floorf, 1, 			1000, 	5000000, 0, 0, 0},
+	{"floorf_c   ", 	floorf_c, 	floorf, 1, 			1000, 	5000000, 0, 0, 0},
+	{"floorf_neon",		floorf_neon,floorf, 1, 			1000, 	5000000, 0, 0, 0},
 
-	{"ceilf     ", 		ceilf, 		ceilf, 	1, 			1000, 	500000, 0, 0, 0},
-	{"ceilf_c   ", 		ceilf_c, 	ceilf, 	1, 			1000, 	500000, 0, 0, 0},
-	{"ceilf_neon",		ceilf_neon,	ceilf, 	1, 			1000, 	500000, 0, 0, 0},
+	{"ceilf     ", 		ceilf, 		ceilf, 	1, 			1000, 	5000000, 0, 0, 0},
+	{"ceilf_c   ", 		ceilf_c, 	ceilf, 	1, 			1000, 	5000000, 0, 0, 0},
+	{"ceilf_neon",		ceilf_neon,	ceilf, 	1, 			1000, 	5000000, 0, 0, 0},
 
-	{"fabsf     ", 		fabsf, 		fabsf, 	1, 			1000, 	500000, 0, 0, 0},
-	{"fabsf_c   ", 		fabsf_c, 	fabsf, 	1, 			1000, 	500000, 0, 0, 0},
-	{"fabsf_neon",		fabsf_neon,	fabsf, 	1, 			1000, 	500000, 0, 0, 0},
+	{"fabsf     ", 		fabsf, 		fabsf, 	1, 			1000, 	5000000, 0, 0, 0},
+	{"fabsf_c   ", 		fabsf_c, 	fabsf, 	1, 			1000, 	5000000, 0, 0, 0},
+	{"fabsf_neon",		fabsf_neon,	fabsf, 	1, 			1000, 	5000000, 0, 0, 0},
 
 	
 	{"sqrtf      ", 	sqrtf, 		sqrtf, 	1, 			1000, 	500000, 0, 0, 0},
@@ -144,14 +144,14 @@ void
 test_mathfunc1(test1_t *tst)
 {
 
-	float x;
-	float dx = (tst->rng1 - tst->rng0) / (tst->num);
+	double x;
+	double dx = (tst->rng1 - tst->rng0) / ((double)tst->num);
 
 	tst->emax = 0;
 	tst->xmax = 0;
 	for(x = tst->rng0; x < tst->rng1 ; x += dx){	
-		float r = (tst->func)(x);
-		float rr = (tst->bench)(x);
+		float r = (tst->func)((float)x);
+		float rr = (tst->bench)((float)x);
 		float dr = fabs(r - rr) * (100 / rr);
 		if (dr > tst->emax && rr > 0.001){
 			tst->emax = dr;
@@ -160,18 +160,18 @@ test_mathfunc1(test1_t *tst)
 	}
 	
 #ifdef WIN32
-	tst->time = GetTickCount()*1000 ;
+	tst->time = (1000 * clock()) / (CLOCKS_PER_SEC / 1000);
 #else
 	getrusage(RUSAGE_SELF, &ru);	
 	tst->time = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
 #endif
 
 	for(x = tst->rng0; x < tst->rng1 ; x += dx){	
-		(tst->func)(x);
+		(tst->func)((float)x);
 	}
 
 #ifdef WIN32
-	tst->time = GetTickCount()*1000 - tst->time;
+	tst->time = (1000 * clock()) / (CLOCKS_PER_SEC / 1000) - tst->time;
 #else
 	getrusage(RUSAGE_SELF, &ru);	
 	tst->time = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec - tst->time;
@@ -182,17 +182,17 @@ test_mathfunc1(test1_t *tst)
 void
 test_mathfunc2(test2_t *tst)
 {
-	float x, y;
-	float rng = tst->rng1 - tst->rng0;
-	float d = (rng * rng) / ((float) tst->num);
+	double x, y;
+	double rng = tst->rng1 - tst->rng0;
+	double d = (rng * rng) / ((double) tst->num);
 
 	tst->emax = 0;
 	tst->xmax = 0;
 	
 	for(y = (tst->rng0); y < (tst->rng1) ; y += d){	
 		for(x = (tst->rng0); x < (tst->rng1); x += d){	
-			float r = (tst->func)(x, y);
-			float rr = (tst->bench)(x, y);
+			float r = (tst->func)((float)x, (float)y);
+			float rr = (tst->bench)((float)x, (float)y);
 			float dr = fabs(r - rr) * (100 / rr);
 			if (dr > tst->emax && rr > 0.001){
 				tst->emax = dr;
@@ -202,7 +202,7 @@ test_mathfunc2(test2_t *tst)
 	}
 	
 #ifdef WIN32
-	tst->time = GetTickCount()*1000 ;
+	tst->time = (1000 * clock()) / (CLOCKS_PER_SEC / 1000) ;
 #else
 	getrusage(RUSAGE_SELF, &ru);	
 	tst->time = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
@@ -210,12 +210,12 @@ test_mathfunc2(test2_t *tst)
 
 	for(y = tst->rng0; y < tst->rng1 ; y += d){	
 		for(x = tst->rng0; x < tst->rng1 ; x += d){	
-			(tst->func)(x, y);
+			(tst->func)((float)x, (float)y);
 		}
 	}
 
 #ifdef WIN32
-	tst->time = GetTickCount()*1000 - tst->time;
+	tst->time = (1000 * clock()) / (CLOCKS_PER_SEC / 1000) - tst->time;
 #else
 	getrusage(RUSAGE_SELF, &ru);	
 	tst->time = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec - tst->time;
