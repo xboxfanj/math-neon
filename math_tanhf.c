@@ -21,9 +21,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "math.h"
 #include "math_neon.h"
  
+/* 
+TanH = (e^x - e^-x) / (e^x + e^-x)
+TanH = (e^x - e^-x)(e^x) / (e^x + e^-x)(e^x)
+TanH = (e^2x - 1) / (e^2x + 1)
+
+*/
+ 
 float tanhf_c(float x)
 {
-	float a, b;
+	float a, b, c;
 	int m;
 	union{
 		float 	f;
@@ -32,23 +39,21 @@ float tanhf_c(float x)
 	
 	x = 2.0f * x;
 	a = expf_c(x);
-	a = a + 1.0f;
+	c = a + 1.0f;
 		
 	//reciporical approx.
-	xx.f = a;
+	xx.f = c;
 	m = 0x3F800000 - (xx.i & 0x7F800000);
 	xx.i = xx.i + m;
 	xx.f = 1.41176471f - 0.47058824f * xx.f;
 	xx.i = xx.i + m;
-	b = 2.0 - xx.f * a;
+	b = 2.0 - xx.f * c;
 	xx.f = xx.f * b;	
-	b = 2.0 - xx.f * a;
+	b = 2.0 - xx.f * c;
 	xx.f = xx.f * b;
-
-	xx.f = 2.0f * xx.f;
-	a = 1.0;
-	a = a - xx.f;
-	return a;
+	c = a - 1.0;
+	xx.f *= c;
+	return xx.f;
 }
 
 
