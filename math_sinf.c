@@ -73,6 +73,9 @@ float sinf_neon(float x)
 {
 #ifdef __MATH_NEON
 	asm volatile (
+	
+	"vld1.32 		d3, [%0]				\n\t"	//d3 = {invrange, range}
+	
 #if (__MATH_FPABI == 1)
 	"vdup.f32 		d0, d0[0]				\n\t"	//d0 = {x, x}
 #else
@@ -80,33 +83,27 @@ float sinf_neon(float x)
 #endif
 	"vabs.f32 		d1, d0					\n\t"	//d1 = {ax, ax}
 	
-	//Range Reduction:
-	"vld1.32 		d3, [%0]				\n\t"	//d3 = {invrange, range}
 	"vmul.f32 		d2, d1, d3[0]			\n\t"	//d2 = d1 * d3[0] 
 	"vcvt.u32.f32 	d2, d2					\n\t"	//d2 = (int) d2
-	"vcvt.f32.u32 	d4, d2					\n\t"	//d4 = (float) d2
+	"vcvt.f32.u32 	d4, d2					\n\t"	//d4 = (float) d2	
 	"vmls.f32 		d1, d4, d3[1]			\n\t"	//d1 = d1 - d4 * d3[1]
 	
-	//Checking Quadrant:
-	//ax = ax - (k&1) * M_PI_2
-	"vmov.i32	 	d4, #1					\n\t"	//d4 = 1
-	"vand.i32 		d4, d2, d4				\n\t"	//d4 = d2 & d4
-	"vcvt.f32.u32 	d5, d4					\n\t"	//d5 = (float) d4
-	"vmls.f32 		d1, d5, d3[1]			\n\t"	//d1 = d1 - d4 * d3[1]
-
-	//ax = ax ^ ((k & 1) ^ (k >> 1) ^ (x < 0) << 31)
-	"vshr.u32 		d3, d2, #1				\n\t"	//d3 = d2 >> 1
-	"veor.i32 		d4, d4, d3				\n\t"	//d4 = d4 ^ d3	
-	"vclt.f32 		d3, d0, #0				\n\t"	//d3 = (d0 < 0.0)
-	"veor.i32 		d4, d4, d3				\n\t"	//d4 = d4 ^ d3	
-	"vshl.i32 		d4, d4, #31				\n\t"	//d4 = d4 << 31
-	"veor.i32 		d1, d1, d4				\n\t"	//d1 = d1 ^ d4
+	"vshr.u32 		d7, d2, #1				\n\t"	//d7 = d2 >> 1
+	"vmov.i32	 	d5, #1					\n\t"	//d5 = 1	
+	"vand.i32 		d5, d2, d5				\n\t"	//d5 = d2 & d5
+	"vclt.f32 		d18, d0, #0				\n\t"	//d18 = (d0 < 0.0)
+	"vcvt.f32.u32 	d6, d5					\n\t"	//d6 = (float) d5
+	"vmls.f32 		d1, d6, d3[1]			\n\t"	//d1 = d1 - d6 * d3[1]
+	"veor.i32 		d5, d5, d7				\n\t"	//d5 = d5 ^ d7	
 	
-	//polynomial:
+	"vld1.32 		{d16, d17}, [%1]		\n\t"	//q8 = {p7, p3, p5, p1}
+	"veor.i32 		d5, d5, d18				\n\t"	//d5 = d5 ^ d18	
+	"vshl.i32 		d5, d5, #31				\n\t"	//d5 = d5 << 31
+	"veor.i32 		d1, d1, d5				\n\t"	//d1 = d1 ^ d5
+	
 	"vmul.f32 		d2, d1, d1				\n\t"	//d2 = d1*d1 = {x^2, x^2}	
-	"vld1.32 		{d4, d5}, [%1]			\n\t"	//d4 = {p7, p3}, d5 = {p5, p1}
 	"vmul.f32 		d3, d2, d2				\n\t"	//d3 = d2*d2 = {x^4, x^4}		
-	"vmul.f32 		q0, q2, d1[0]			\n\t"	//q0 = q2 * d1[0] = {p7x, p3x, p5x, p1x}
+	"vmul.f32 		q0, q8, d1[0]			\n\t"	//q0 = q8 * d1[0] = {p7x, p3x, p5x, p1x}
 	"vmla.f32 		d1, d0, d2[0]			\n\t"	//d1 = d1 + d0*d2 = {p5x + p7x^3, p1x + p3x^3}		
 	"vmla.f32 		d1, d3, d1[0]			\n\t"	//d1 = d1 + d3*d0 = {...., p1x + p3x^3 + p5x^5 + p7x^7}		
 
@@ -117,7 +114,7 @@ float sinf_neon(float x)
 #endif
 	: 
 	: "r"(__sinf_rng), "r"(__sinf_lut) 
-    : "d0", "d1", "d2", "d3", "d4", "d5"
+    : "q0", "q1", "q2", "q3", "q8", "q9"
 	);
 #else
 	return sinf_c(x);
