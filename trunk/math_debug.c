@@ -35,8 +35,11 @@ struct	test1_s {
 	float 		(*bench)(float);	//the function to benchmark against.
 	float 		rng0, rng1;
 	int			num;
-	float 		emax;				//maximum error
-	float 		xmax;				//location of maximum error
+	float 		emaxabs;
+	float 		xmaxabs;
+	float 		emaxrel;
+	float 		xmaxrel;
+	float 		erms;
 	int			time;				//time to execute num functions;
 };
 
@@ -46,8 +49,11 @@ struct	test2_s {
 	float 		(*bench)(float, float);	//the function to benchmark against.
 	float 		rng0, rng1;
 	int			num;
-	float 		emax;				//maximum error
-	float 		xmax;				//location of maximum error
+	float 		emaxabs;
+	float 		xmaxabs;
+	float 		emaxrel;
+	float 		xmaxrel;
+	float 		erms;
 	int			time;				//time to execute num functions;
 };
 
@@ -57,13 +63,13 @@ typedef struct test2_s test2_t;
 
 test1_t test1[48] = 
 {
-	{"sinf       ", 	sinf, 		sinf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
-	{"sinf_c     ", 	sinf_c, 	sinf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
-	{"sinf_neon  ", 	sinf_neon, 	sinf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"sinf       ", 	sinf, 		sinf, 	-M_PI, 		M_PI, 	500000},
+	{"sinf_c     ", 	sinf_c, 	sinf, 	-M_PI, 		M_PI, 	500000},
+	{"sinf_neon  ", 	sinf_neon, 	sinf, 	-M_PI, 		M_PI, 	500000},
 	
-	{"cosf       ", 	cosf, 		cosf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
-	{"cosf_c     ", 	cosf_c, 	cosf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
-	{"cosf_neon  ", 	cosf_neon, 	cosf, 	-M_PI, 		M_PI, 	500000, 0, 0, 0},
+	{"cosf       ", 	cosf, 		cosf, 	-M_PI, 		M_PI, 	500000},
+	{"cosf_c     ", 	cosf_c, 	cosf, 	-M_PI, 		M_PI, 	500000},
+	{"cosf_neon  ", 	cosf_neon, 	cosf, 	-M_PI, 		M_PI, 	500000},
 
 	{"tanf       ", 	tanf, 		tanf, 	-M_PI_4, 	M_PI_4, 500000, 0, 0, 0},
 	{"tanf_c     ", 	tanf_c, 	tanf, 	-M_PI_4, 	M_PI_4, 500000, 0, 0, 0},
@@ -147,17 +153,25 @@ test_mathfunc1(test1_t *tst)
 	double x;
 	double dx = (tst->rng1 - tst->rng0) / ((double)tst->num);
 
-	tst->emax = 0;
-	tst->xmax = 0;
+	tst->emaxabs = tst->xmaxabs = 0;
+	tst->emaxrel = tst->xmaxrel = 0;
+	tst->erms = 0;
 	for(x = tst->rng0; x < tst->rng1 ; x += dx){	
 		float r = (tst->func)((float)x);
 		float rr = (tst->bench)((float)x);
-		float dr = fabs(r - rr) * (100 / rr);
-		if (dr > tst->emax && rr > 0.001){
-			tst->emax = dr;
-			tst->xmax = x;
+		float dr = fabs(r - rr);
+		float drr = dr * (100.0f / rr);
+		tst->erms += dr*dr;
+		if (dr > tst->emaxabs){
+			tst->emaxabs = dr;
+			tst->xmaxabs = x;
+		}
+		if (drr > tst->emaxrel){
+			tst->emaxrel = drr;
+			tst->xmaxrel = x;
 		}
 	}
+	tst->erms = sqrt(tst->erms / ((double) tst->num));
 	
 #ifdef WIN32
 	tst->time = (1000 * clock()) / (CLOCKS_PER_SEC / 1000);
@@ -186,17 +200,21 @@ test_mathfunc2(test2_t *tst)
 	double rng = tst->rng1 - tst->rng0;
 	double d = (rng * rng) / ((double) tst->num);
 
-	tst->emax = 0;
-	tst->xmax = 0;
-	
+	tst->emaxabs = tst->xmaxabs = 0;
+	tst->emaxrel = tst->xmaxrel = 0;
 	for(y = (tst->rng0); y < (tst->rng1) ; y += d){	
 		for(x = (tst->rng0); x < (tst->rng1); x += d){	
-			float r = (tst->func)((float)x, (float)y);
-			float rr = (tst->bench)((float)x, (float)y);
-			float dr = fabs(r - rr) * (100 / rr);
-			if (dr > tst->emax && rr > 0.001){
-				tst->emax = dr;
-				tst->xmax = x;
+			float r = (tst->func)((float)x, y);
+			float rr = (tst->bench)((float)x, y);
+			float dr = fabs(r - rr);
+			float drr = dr * (100.0f / rr);
+			if (dr > tst->emaxabs){
+				tst->emaxabs = dr;
+				tst->xmaxabs = x;
+			}
+			if (drr > tst->emaxrel && fabsf(rr) > 0.0001){
+				tst->emaxrel = drr;
+				tst->xmaxrel = x;
 			}
 		}
 	}
@@ -237,25 +255,25 @@ int main(int argc, char** argv)
 #if 1
 
 	//test single argument functions:
-	printf("Function\tRange\t\tNumber\tMax Error\tRate\n");	
-	printf("-------------------------------------------------------------------------\n");	
+	printf("Function\tRange\t\tNumber\tABS Max Error\tREL Max Error\tRMS Error\tRate\n");	
+	printf("------------------------------------------------------------------------------------------------------\n");	
 	for(i = 0; i < 48; i++){
 		test_mathfunc1(&test1[i]);	
 		
 		ii = i - (i % 3);
 		
-		printf("%s\t[%.2f, %.2f]\t%i\t%.2e%%\t%.2f%%\n", test1[i].name,  test1[i].rng0, test1[i].rng1, 
-			test1[i].num, test1[i].emax, 100.0f * (float)test1[ii].time / test1[i].time);
+		printf("%s\t[%.2f, %.2f]\t%i\t%.2e\t%.2e%%\t%.2e\t%.2f%%\n", test1[i].name,  test1[i].rng0, test1[i].rng1, 
+			test1[i].num, test1[i].emaxabs, test1[i].emaxrel, test1[i].erms, 100.0f * (float)test1[ii].time / test1[i].time);
 	}
 	for(i = 0; i < 9; i++){
 		test_mathfunc2(&test2[i]);
 	
 		ii = i - (i % 3);
 		
-		printf("%s\t[%.2f, %.2f]\t%i\t%.2e%%\t%.2f%%\n", test2[i].name,  test2[i].rng0, test2[i].rng1, 
-			test2[i].num, test2[i].emax, 100.0f * (float)test2[ii].time / test2[i].time);
+		printf("%s\t[%.2f, %.2f]\t%i\t%.2e\t%.2e%%\t%.2e\t%.2f%%\n", test2[i].name,  test2[i].rng0, test2[i].rng1, 
+			test2[i].num, test2[i].emaxabs, test2[i].emaxrel, test2[i].erms, 100.0f * (float)test2[ii].time / test2[i].time);
 	}
-	printf("--------------------------------------------------------------------------\n");	
+	printf("------------------------------------------------------------------------------------------------------\n");	
 
 #else
 
