@@ -33,13 +33,20 @@ float sinhf_c(float x)
 }
 
 
-float sinhf_neon(float x)
+float sinhf_neon_hfp(float x)
 {
 #ifdef __MATH_NEON
-	asm volatile (""
-	);
-#else
-	return sinhf_c(x);
+	
 #endif
 }
 
+float sinhf_neon_sfp(float x)
+{
+#ifdef __MATH_NEON
+	asm volatile ("vmov.f32 s0, r0 		\n\t");
+	sinhf_neon_hfp(x);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
+#else
+	return sinhf_c(x);
+#endif
+};

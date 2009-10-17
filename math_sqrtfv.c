@@ -102,25 +102,14 @@ void sqrtfv_neon(float *x, int n, float *r)
 	"tst 			r1, #1 					\n\t"	//r1 & 1
 	"beq 			1f 						\n\t"	//
 
-#if __MATH_FPABI == 1
 	"vld1.32		d0[0], [r0]! 			\n\t"	//s0 = *x++
 	"mov 			ip, lr 					\n\t"	//ip = lr
-	"bl 			sqrtf_neon 				\n\t"	//sqrtf_neon
+	//"bl 			sqrtf_neon_hfp 			\n\t"	//sqrtf_neon
 	"mov 			lr, ip 					\n\t"	//lr = ip
 	"vst1.32		d0[0], [r2]! 			\n\t"	//*r++ = r0
 	"subs 			r1, r1, #1				\n\t"	//r1 = r1 - 1;		
 	"bxeq 			lr						\n\t"	//
-#else
-	"mov 			r3, r0 					\n\t"	//r3 = r0
-	"mov 			ip, lr 					\n\t"	//ip = lr
-	"ldr 			r0, [r3]! 				\n\t"	//r0 = *x++
-	"bl 			sqrtf_neon 				\n\t"	//sqrtf_neon
-	"str 			r0, [r2]! 				\n\t"	//*r++ = r0
-	"mov 			lr, ip 					\n\t"	//lr = ip
-	"mov 			r0, r3 					\n\t"	//r0 = r3		
-	"subs 			r1, r1, #1				\n\t"	//r1 = r1 - 1;
-	"bxne 			lr						\n\t"	//
-#endif	
+
 	"1:				 						\n\t"	//
 
 	"vld1.32 		d0, [r0]! 				\n\t"	//d0 = (*x[0], *x[1]), x+=2;

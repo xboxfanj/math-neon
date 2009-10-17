@@ -21,29 +21,43 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "math.h"
 #include "math_neon.h"
 
-float frexpf_c(float x, int *e)
+/*
+Test func : acosf(x)
+Test Range: -1.0 < x < 1.0
+Peak Error:	~0.005%
+RMS  Error: ~0.001%
+*/
+
+const float __acosf_pi_2 = M_PI_2;
+
+float acosf_c(float x)
 {
-	union {
-		float 	f;
-		int 	i;
-	} r;
-	int n;
-	
-	r.f = x;
-	n = r.i >> 23;
-	n = n & 0xFF;
-	n = n - 126;
-	r.i = r.i - (n << 23);
-	*e = n;
-	return r.f;
+	return __acosf_pi_2 - asinf_c(x);
 }
 
-float frexpf_neon_hfp(float x, int *e)
+
+float acosf_neon_hfp(float x)
 {
-	return frexpf_c(x, e);
+#ifdef __MATH_NEON
+	asinf_neon_hfp(x);
+	asm volatile (
+	"vdup.f32	 	d1, %0					\n\t"	//d1 = {pi/2, pi/2};
+	"vsub.f32	 	d0, d1, d0				\n\t"	//d0 = d1 - d0;
+	::"r"(__acosf_pi_2):
+	);
+#endif
 }
 
-float frexpf_neon_sfp(float x, int *e)
+float acosf_neon_sfp(float x)
 {
-	return frexpf_c(x, e);
+#ifdef __MATH_NEON
+	asm volatile ("vmov.f32 s0, r0 		\n\t");
+	acosf_neon_hfp(x);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
+#else
+	return acosf_c(x);
+#endif
 }
+
+
+

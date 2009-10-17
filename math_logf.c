@@ -83,16 +83,12 @@ float logf_c(float x)
 	return r.f;
 }
 
-float logf_neon(float x)
+float logf_neon_hfp(float x)
 {
 #ifdef __MATH_NEON
 	asm volatile (
 	
-#if __MATH_FPABI == 1
 	"vdup.f32		d0, d0[0]				\n\t"	//d0 = {x,x};
-#else	
-	"vdup.f32		d0, r0					\n\t"	//d0 = {x,x};
-#endif
 	
 	//extract exponent
 	"vmov.i32		d2, #127				\n\t"	//d2 = 127;
@@ -114,16 +110,22 @@ float logf_neon(float x)
 	"vcvt.f32.s32 	d6, d6					\n\t"	//d6 = (float) d6
 	"vmla.f32 		d2, d6, d7				\n\t"	//d2 = d2 + d6 * d7		
 
-#if __MATH_FPABI == 1
 	"vmov.f32 		s0, s4					\n\t"	//s0 = s4
-#else
-	"vmov.f32 		r0, s4					\n\t"	//r0 = s4
-#endif
 
 	:: "r"(__logf_rng), "r"(__logf_lut) 
     : "d0", "d1", "q1", "q2", "d6", "d7"
 	);
+#endif
+}
+
+float logf_neon_sfp(float x)
+{
+#ifdef __MATH_NEON
+	asm volatile ("vmov.f32 s0, r0 		\n\t");
+	logf_neon_hfp(x);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
 #else
 	return logf_c(x);
 #endif
-}
+};
+

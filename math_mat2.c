@@ -39,6 +39,7 @@ matmul2_c(float m0[4], float m1[4], float d[4])
 	d[3] = m0[1]*m1[2] + m0[3]*m1[3];
 }
 
+void
 matmul2_neon(float m0[4], float m1[4], float d[4])
 {	
 #ifdef __MATH_NEON
