@@ -25,9 +25,22 @@ float cosf_c(float x)
 	return sinf_c(x + M_PI_2);
 }
 
-float cosf_neon(float x)
+float cosf_neon_hfp(float x)
 {
+#ifdef __MATH_NEON
 	float xx = x + M_PI_2;
-	return sinf_neon(xx);
+	return sinf_neon_hfp(xx);
+#endif
 }
+
+float cosf_neon_sfp(float x)
+{
+#ifdef __MATH_NEON
+	asm volatile ("vdup.f32 d0, r0 		\n\t");
+	cosf_neon_hfp(x);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
+#else
+	return cosf_c(x);
+#endif
+};
 

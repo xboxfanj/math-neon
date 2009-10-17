@@ -79,16 +79,12 @@ float tanf_c(float x){
 }
 
 
-float tanf_neon(float x)
+float tanf_neon_hfp(float x)
 {
 #ifdef __MATH_NEON
 	asm volatile (
 
-#if __MATH_FPABI == 1
 	"vdup.f32 		d0, d0[0]				\n\t"	//d0 = {x, x}
-#else
-	"vdup.f32 		d0, r0					\n\t"	//d0 = {x, x}
-#endif
 	"vabs.f32 		d1, d0					\n\t"	//d1 = {ax, ax}
 	
 	//Range Reduction:
@@ -134,17 +130,23 @@ float tanf_neon(float x)
 	
 	"vmul.f32 		d0, d0, d1				\n\t"	//d0 = d0 * d1
 	
-#if __MATH_FPABI == 1
 	"vmov.f32 		s0, s1					\n\t"	//s0 = s1
-#else
-	"vmov.f32 		r0, s1					\n\t"	//r0 = s1
-#endif
 	
 	:: "r"(__tanf_rng), "r"(__tanf_lut) 
     : "d0", "d1", "d2", "d3", "d4", "d5"
 	);
+#endif
+}
+
+
+float tanf_neon_sfp(float x)
+{
+#ifdef __MATH_NEON
+	asm volatile ("vdup.f32 d0, r0 		\n\t");
+	tanf_neon_hfp(x);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
 #else
 	return tanf_c(x);
 #endif
-}
+};
 

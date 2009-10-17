@@ -109,18 +109,13 @@ float powf_c(float x, float n)
 	return r.f;
 }
 
-float powf_neon(float x, float n)
+float powf_neon_hfp(float x, float n)
 {
 #ifdef __MATH_NEON
 	asm volatile (
 		
-#if __MATH_FPABI == 1
 	"vdup.f32		d16, d0[1]				\n\t"	//d16 = {y,y};	
 	"vdup.f32		d0, d0[0]				\n\t"	//d0 = {x,x};
-#else	
-	"vdup.f32		d16, r1					\n\t"	//d16 = {y,y};
-	"vdup.f32		d0, r0					\n\t"	//d0 = {x,x};
-#endif
 	
 	//extract exponent
 	"vmov.i32		d2, #127				\n\t"	//d2 = 127;
@@ -164,14 +159,20 @@ float powf_neon(float x, float n)
 	"vadd.i32 		d0, d2, d6				\n\t"	//d0 = d2 + d6		
 
 
-#if (__MATH_FPABI != 1)
-	"vmov.f32 		r0, s0					\n\t"	//r0 = s0
-#endif
-
 	:: "r"(__powf_rng), "r"(__powf_lut) 
     : "d0", "d1", "q1", "q2", "d6", "d7"
 	);
+#endif
+}
+
+float powf_neon_sfp(float x, float n)
+{
+#ifdef __MATH_NEON
+	asm volatile ("vmov.f32 s0, r0 		\n\t");
+	asm volatile ("vmov.f32 s1, r1 		\n\t");
+	powf_neon_hfp(x, n);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
 #else
 	return powf_c(x, n);
 #endif
-}
+};

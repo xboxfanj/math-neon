@@ -35,27 +35,28 @@ float floorf_c(float x)
 	return r;
 }
 
-float floorf_neon(float x)
+float floorf_neon_hfp(float x)
 {
 #ifdef __MATH_NEON
 	asm volatile (
-
-#if (__MATH_FPABI != 1)
-	"vdup.f32 		d0, r0					\n\t"	//d0 = {x, x}
-#endif
-
 	"vcvt.s32.f32 	d1, d0					\n\t"	//d1 = (int) d0;
 	"vcvt.f32.s32 	d1, d1					\n\t"	//d1 = (float) d1;
 	"vcgt.f32 		d0, d1, d0				\n\t"	//d0 = (d1 > d0);
+	"vshr.u32 		d0, #31					\n\t"	//d0 = d0 >> 31;
 	"vcvt.f32.u32 	d0, d0					\n\t"	//d0 = (float) d0;
 	"vsub.f32 		d0, d1, d0				\n\t"	//d0 = d1 - d0;
-
-#if (__MATH_FPABI != 1)
-	"vmov.f32 		r0, s0					\n\t"	//r0 = d0[0];
-#endif
 	::: "d0", "d1"
 	);
+#endif
+}
+
+float floorf_neon_sfp(float x)
+{
+#ifdef __MATH_NEON
+	asm volatile ("vmov.f32 s0, r0 		\n\t");
+	floorf_neon_hfp(x);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
 #else
 	return floorf_c(x);
 #endif
-}
+};

@@ -26,7 +26,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //functions are rerouted to their equivalent *_c function.
 #define __MATH_NEON			
 
-//Floating Point value ABI 0=softfp, 1=hardfp. Only effects *_neon routines.
+//Default Floating Point value ABI: 0=softfp, 1=hardfp. Only effects *_neon routines.
+//You can access the hardfp versions directly via the *_hard suffix. 
+//You can access the softfp versions directly via the *_soft suffix. 
 #define __MATH_FPABI 	0	
 
 #endif
@@ -52,6 +54,58 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define M_SQRT2		1.41421356237309504880	/* sqrt(2) */
 #define M_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
 #endif 
+
+#if __MATH_FPABI == 1
+#define sinf_neon		sinf_neon_hfp
+#define cosf_neon		cosf_neon_hfp
+#define	sincosf_neon	sincosf_neon_hfp
+#define tanf_neon		tanf_neon_hfp
+#define atanf_neon		atanf_neon_hfp
+#define atan2f_neon		atan2f_neon_hfp
+#define asinf_neon		asinf_neon_hfp
+#define acosf_neon		acosf_neon_hfp
+#define sinhf_neon		sinhf_neon_hfp
+#define coshf_neon		coshf_neon_hfp
+#define tanhf_neon		tanhf_neon_hfp
+#define expf_neon		expf_neon_hfp
+#define logf_neon		logf_neon_hfp
+#define log10f_neon		log10f_neon_hfp
+#define powf_neon		powf_neon_hfp
+#define floorf_neon		floorf_neon_hfp
+#define ceilf_neon		ceilf_neon_hfp
+#define fabsf_neon		fabsf_neon_hfp
+#define ldexpf_neon		ldexpf_neon_hfp
+#define frexpf_neon		frexpf_neon_hfp
+#define fmodf_neon		fmodf_neon_hfp
+#define modf_neon		modf_neon_hfp
+#define sqrtf_neon		sqrtf_neon_hfp
+#define invsqrtf_neon	invsqrtf_neon_hfp
+#else
+#define sinf_neon		sinf_neon_sfp
+#define cosf_neon		cosf_neon_sfp
+#define	sincosf_neon	sincosf_neon_sfp
+#define tanf_neon		tanf_neon_sfp
+#define atanf_neon		atanf_neon_sfp
+#define atan2f_neon		atan2f_neon_sfp
+#define asinf_neon		asinf_neon_sfp
+#define acosf_neon		acosf_neon_sfp
+#define sinhf_neon		sinhf_neon_sfp
+#define coshf_neon		coshf_neon_sfp
+#define tanhf_neon		tanhf_neon_sfp
+#define expf_neon		expf_neon_sfp
+#define logf_neon		logf_neon_sfp
+#define log10f_neon		log10f_neon_sfp
+#define powf_neon		powf_neon_sfp
+#define floorf_neon		floorf_neon_sfp
+#define ceilf_neon		ceilf_neon_sfp
+#define fabsf_neon		fabsf_neon_sfp
+#define ldexpf_neon		ldexpf_neon_sfp
+#define frexpf_neon		frexpf_neon_sfp
+#define fmodf_neon		fmodf_neon_sfp
+#define modf_neon		modf_neon_sfp
+#define sqrtf_neon		sqrtf_neon_sfp
+#define invsqrtf_neon	invsqrtf_neon_sfp
+#endif
 
 /* 
 function:	enable_runfast
@@ -121,7 +175,8 @@ return: 	the sine function evaluated at x radians.
 expression: r = sin(x) 	
 */
 float 		sinf_c(float x);
-float 		sinf_neon(float x);
+float 		sinf_neon_hfp(float x);
+float 		sinf_neon_sfp(float x);
 
 /* 
 function:	cosf
@@ -131,7 +186,8 @@ expression: r = cos(x)
 notes:		computed using cos(x) = sin(x + pi/2)
 */
 float 		cosf_c(float x);
-float 		cosf_neon(float x);
+float 		cosf_neon_hfp(float x);
+float 		cosf_neon_sfp(float x);
 
 /* 
 function:	sincosf
@@ -141,7 +197,8 @@ expression: r = {sin(x), cos(x)}
 notes:		faster than evaluating seperately.
 */
 void		sincosf_c(float x, float r[2]);
-void		sincosf_neon(float x, float r[2]);
+void		sincosf_neon_hfp(float x, float r[2]);
+void		sincosf_neon_sfp(float x, float r[2]);
 
 /* 
 function:	sinfv
@@ -160,7 +217,8 @@ expression: r = tan(x)
 notes:		computed using tan(x) = sin(x) / cos(x)
 */
 float 		tanf_c(float x);
-float 		tanf_neon(float x);
+float 		tanf_neon_hfp(float x);
+float 		tanf_neon_sfp(float x);
 
 /* 
 function:	atanf
@@ -168,7 +226,8 @@ return: 	the arctangent evaluated at x.
 expression: r = atan(x) 	
 */
 float 		atanf_c(float x);
-float 		atanf_neon(float x);
+float 		atanf_neon_hfp(float x);
+float 		atanf_neon_sfp(float x);
 
 /* 
 function:	atanf
@@ -176,7 +235,8 @@ return: 	the arctangent evaluated at x.
 expression: r = atan(x) 	
 */
 float 		atan2f_c(float y, float x);
-float 		atan2f_neon(float y, float x);
+float 		atan2f_neon_hfp(float y, float x);
+float 		atan2f_neon_sfp(float y, float x);
 
 /* 
 function:	asinf
@@ -184,7 +244,8 @@ return: 	the arcsine evaluated at x.
 expression: r = asin(x) 	
 */
 float 		asinf_c(float x);
-float 		asinf_neon(float x);
+float 		asinf_neon_hfp(float x);
+float 		asinf_neon_sfp(float x);
 
 /* 
 function:	acosf
@@ -192,7 +253,8 @@ return: 	the arcsine evaluated at x.
 expression: r = asin(x) 	
 */
 float 		acosf_c(float x);
-float 		acosf_neon(float x);
+float 		acosf_neon_hfp(float x);
+float 		acosf_neon_sfp(float x);
 
 /* 
 function:	sinhf
@@ -200,7 +262,8 @@ return: 	the arcsine evaluated at x.
 expression: r = asin(x) 	
 */
 float 		sinhf_c(float x);
-float 		sinhf_neon(float x);
+float 		sinhf_neon_hfp(float x);
+float 		sinhf_neon_sfp(float x);
 
 /* 
 function:	coshf
@@ -208,7 +271,8 @@ return: 	the arcsine evaluated at x.
 expression: r = asin(x) 	
 */
 float 		coshf_c(float x);
-float 		coshf_neon(float x);
+float 		coshf_neon_hfp(float x);
+float 		coshf_neon_sfp(float x);
 
 /* 
 function:	tanhf
@@ -216,7 +280,8 @@ return: 	the arcsine evaluated at x.
 expression: r = asin(x) 	
 */
 float 		tanhf_c(float x);
-float 		tanhf_neon(float x);
+float 		tanhf_neon_hfp(float x);
+float 		tanhf_neon_sfp(float x);
 
 /* 
 function:	expf
@@ -224,7 +289,8 @@ return: 	the natural exponential evaluated at x.
 expression: r = e ** x	
 */
 float 		expf_c(float x);
-float 		expf_neon(float x);
+float 		expf_neon_hfp(float x);
+float 		expf_neon_sfp(float x);
 
 /* 
 function:	logf
@@ -233,7 +299,8 @@ expression: r = ln(x)
 notes:		assumes x > 0
 */
 float 		logf_c(float x);
-float 		logf_neon(float x);
+float 		logf_neon_hfp(float x);
+float 		logf_neon_sfp(float x);
 
 /* 
 function:	log10f
@@ -242,7 +309,8 @@ expression: r = log10(x)
 notes:		assumes x > 0
 */
 float 		log10f_c(float x);
-float 		log10f_neon(float x);
+float 		log10f_neon_hfp(float x);
+float 		log10f_neon_sfp(float x);
 
 /* 
 function:	powf
@@ -251,7 +319,8 @@ expression: r = x ** y
 notes:		computed using e ** (y * ln(x))
 */
 float 		powf_c(float x, float n);
-float 		powf_neon(float x, float n);
+float 		powf_neon_sfp(float x, float n);
+float 		powf_neon_hfp(float x, float n);
 
 /* 
 function:	floorf
@@ -260,7 +329,8 @@ return: 	x rounded down (towards negative infinity) to its nearest
 notes:		assumes |x| < 2 ** 31
 */
 float 		floorf_c(float x);
-float 		floorf_neon(float x);
+float 		floorf_neon_sfp(float x);
+float 		floorf_neon_hfp(float x);
 
 /* 
 function:	ceilf
@@ -269,7 +339,8 @@ return: 	x rounded up (towards positive infinity) to its nearest
 notes:		assumes |x| < 2 ** 31
 */
 float 		ceilf_c(float x);
-float 		ceilf_neon(float x);
+float 		ceilf_neon_hfp(float x);
+float 		ceilf_neon_sfp(float x);
 
 /* 
 function:	fabsf
@@ -277,8 +348,8 @@ return: 	absolute vvalue of x
 notes:		assumes |x| < 2 ** 31
 */
 float 		fabsf_c(float x);
-float 		fabsf_neon(float x);
-
+float 		fabsf_neon_hfp(float x);
+float 		fabsf_neon_sfp(float x);
 
 /* 
 function:	ldexpf
@@ -286,14 +357,16 @@ return: 	the value of m multiplied by 2 to the power of e.
 expression: r = m * (2 ** e)
 */
 float 		ldexpf_c(float m, int e);
-float 		ldexpf_neon(float m, int e);
+float 		ldexpf_neon_hfp(float m, int e);
+float 		ldexpf_neon_sfp(float m, int e);
 
 /* 
 function:	frexpf
 return: 	the exponent and mantissa of x 
 */
 float 		frexpf_c(float x, int *e);
-float 		frexpf_neon(float x, int *e);
+float 		frexpf_neon_hfp(float x, int *e);
+float 		frexpf_neon_sfp(float x, int *e);
 
 /* 
 function:	fmodf
@@ -302,7 +375,8 @@ expression: r = x - floor(x / y) * y;
 notes:		assumes that |x / y| < 2 ** 31 
 */
 float 		fmodf_c(float x, float y);
-float 		fmodf_neon(float x, float y);
+float 		fmodf_neon_hfp(float x, float y);
+float 		fmodf_neon_sfp(float x, float y);
 
 /* 
 function:	modf
@@ -310,15 +384,26 @@ return: 	breaks x into the integer (i) and fractional part (return)
 notes:		assumes that |x| < 2 ** 31 
 */
 float 		modf_c(float x, int *i);
-float 		modf_neon(float x, int *i);
+float 		modf_neon_hfp(float x, int *i);
+float 		modf_neon_sfp(float x, int *i);
 
 /* 
-function:	modf
-return: 	breaks x into the integer (i) and fractional part (return)
-notes:		assumes that |x| < 2 ** 31 
+function:	sqrtf
+return: 	(x^0.5)
+notes:		 
 */
 float 		sqrtf_c(float x);
-float 		sqrtf_neon(float x);
+float 		sqrtf_neon_hfp(float x);
+float 		sqrtf_neon_sfp(float x);
 
+
+/* 
+function:	invsqrtf
+return: 	1.0f / (x^0.5)
+notes:		 
+*/
+float 		invsqrtf_c(float x);
+float 		invsqrtf_neon_hfp(float x);
+float 		invsqrtf_neon_sfp(float x);
 
 #endif

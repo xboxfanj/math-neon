@@ -20,7 +20,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "math.h"
 #include "math_neon.h"
- 
+
+const float __coshf_rng[2] = {
+	1.442695041f,
+	0.693147180f
+};
+
+const float __coshf_lut[8] = {
+	0.9999999916728642,		//p0
+	0.04165989275009526, 	//p4
+	0.5000006143673624, 	//p2
+	0.0014122663401803872, 	//p6
+	1.000000059694879, 		//p1
+	0.008336936973260111, 	//p5
+	0.16666570253074878, 	//p3
+	0.00019578093328483123	//p7
+};
+  
 float coshf_c(float x)
 {
 	float a, b, xx;
@@ -33,13 +49,20 @@ float coshf_c(float x)
 }
 
 
-float coshf_neon(float x)
+float coshf_neon_hfp(float x)
 {
 #ifdef __MATH_NEON
-	asm volatile (""
-	);
-#else
-	return coshf_c(x);
+	
 #endif
 }
 
+float coshf_neon_sfp(float x)
+{
+#ifdef __MATH_NEON
+	asm volatile ("vmov.f32 s0, r0 		\n\t");
+	coshf_neon_hfp(x);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
+#else
+	return coshf_c(x);
+#endif
+};

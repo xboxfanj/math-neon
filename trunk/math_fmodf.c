@@ -54,16 +54,12 @@ float fmodf_c(float x, float y)
 }
 
 
-float fmodf_neon(float x, float y)
+float fmodf_neon_hfp(float x, float y)
 {
 #ifdef __MATH_NEON
 	asm volatile (
-#if (__MATH_FPABI == 1)
-	"vmov.f32 		s2, s1					\n\t"	//d1[0] = y
-#else
-	"vdup.f32 		d0, r0					\n\t"	//d0 = {x, x}
-	"vdup.f32 		d1, r1					\n\t"	//d1 = {y, y}
-#endif
+	"vdup.f32 		d1, d0[1]					\n\t"	//d1[0] = y
+	"vdup.f32 		d0, d0[0]					\n\t"	//d1[0] = y
 	
 	//fast reciporical approximation
 	"vrecpe.f32 	d2, d1					\n\t"	//d2 = ~1.0 / d1
@@ -81,15 +77,20 @@ float fmodf_neon(float x, float y)
 	"vcvt.f32.s32	d2, d2					\n\t"	//d2 = (float) d2; 
 	"vmls.f32		d0, d1, d2				\n\t"	//d0 = d0 - d1 * d2; 
 
-#if (__MATH_FPABI != 1)
-	"vmov.f32 		r0, s0					\n\t"	//r0 = d0[0];
-#endif
 	::: "d0", "d1", "d2", "d3"
 	);
-		
-#else
-	return fmodf_c(x, y);
 #endif
 }
 
 
+float fmodf_neon_sfp(float x, float y)
+{
+#ifdef __MATH_NEON
+	asm volatile ("vmov.f32 s0, r0 		\n\t");
+	asm volatile ("vmov.f32 s1, r1 		\n\t");
+	fmodf_neon_hfp(x, y);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
+#else
+	return fmodf_c(x,y);
+#endif
+};

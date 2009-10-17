@@ -92,7 +92,7 @@ void sincosf_c( float x, float r[2])
 
 }
 
-void sincosf_neon(float x, float r[2])
+void sincosf_neon_hfp(float x, float r[2])
 {
 
 //HACK: Assumes for softfp that r1 = x, and for hardfp that s0 = x.
@@ -100,11 +100,7 @@ void sincosf_neon(float x, float r[2])
 #ifdef __MATH_NEON
 	asm volatile (
 	//{x, y} = {x, x + pi/2}
-#if (__MATH_FPABI == 1)
 	"vdup.f32 		d1, d0[0]				\n\t"	//d1 = {x, x}
-#else
-	"vdup.f32 		d1, r0					\n\t"	//d1 = {x, x}
-#endif
 	"vld1.32 		d3, [%1]				\n\t"	//d3 = {invrange, range}
 	"vadd.f32 		d0, d1, d3				\n\t"	//d0 = d1 + d3
 	"vmov.f32 		s0, s2					\n\t"	//d0[0] = d1[0]	
@@ -151,3 +147,11 @@ void sincosf_neon(float x, float r[2])
 	sincosf_c(x, r);
 #endif
 }
+
+void sincosf_neon_sfp(float x, float r[2])
+{
+	asm volatile ("vdup.f32 d0, r0 		\n\t");
+	sincosf_neon_hfp(x, r);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
+};
+

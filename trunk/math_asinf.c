@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "math_neon.h"
 
 /*
-Test func : acosf(x)
+Test func : asinf(x)
 Test Range: -1.0 < x < 1.0
 Peak Error:	~0.005%
 RMS  Error: ~0.001%
@@ -89,36 +89,90 @@ float asinf_c(float x)
 	r = b + a * xx.f; 
 	r = d + c * r;
 
-	if (x < 0.0f) r = -r;
+	a = r + r;
+	b = (x < 0.0f);
+	r = r - a * b;
 	return r;
 }
 
 
-float asinf_neon(float x)
+float asinf_neon_hfp(float x)
 {
 #ifdef __MATH_NEON
-	asm volatile (""
-	);
+	asm volatile (
 
-#else
-	return asinf_c(x);
+	"vdup.f32	 	d0, d0[0]				\n\t"	//d0 = {x, x};
+	"vdup.f32	 	d4, %1					\n\t"	//d4 = {pi/2, pi/2};
+	"vmov.f32	 	d6, d0					\n\t"	//d6 = d0;
+	"vabs.f32	 	d0, d0					\n\t"	//d0 = fabs(d0) ;
+
+	"vmov.f32	 	d5, #0.5				\n\t"	//d5 = 0.5;
+	"vmls.f32	 	d5, d0, d5				\n\t"	//d5 = d5 - d0*d5;
+
+	//fast invsqrt approx
+	"vmov.f32 		d1, d5					\n\t"	//d1 = d5
+	"vrsqrte.f32 	d5, d5					\n\t"	//d5 = ~ 1.0 / sqrt(d5)
+	"vmul.f32 		d2, d5, d1				\n\t"	//d2 = d5 * d1
+	"vrsqrts.f32 	d3, d2, d5				\n\t"	//d3 = (3 - d5 * d2) / 2 	
+	"vmul.f32 		d5, d5, d3				\n\t"	//d5 = d5 * d3
+	"vmul.f32 		d2, d5, d1				\n\t"	//d2 = d5 * d1	
+	"vrsqrts.f32 	d3, d2, d5				\n\t"	//d3 = (3 - d5 * d3) / 2	
+	"vmul.f32 		d5, d5, d3				\n\t"	//d5 = d5 * d3	
+		
+	//fast reciporical approximation
+	"vrecpe.f32		d1, d5					\n\t"	//d1 = ~ 1 / d5; 
+	"vrecps.f32		d2, d1, d5				\n\t"	//d2 = 2.0 - d1 * d5; 
+	"vmul.f32		d1, d1, d2				\n\t"	//d1 = d1 * d2; 
+	"vrecps.f32		d2, d1, d5				\n\t"	//d2 = 2.0 - d1 * d5; 
+	"vmul.f32		d5, d1, d2				\n\t"	//d5 = d1 * d2; 
+	
+
+
+	//if |x| > 0.5 -> ax = sqrt((1-ax)/2), r = pi/2
+	"vsub.f32		d5, d0, d5				\n\t"	//d5 = d0 - d5; 
+	"vmov.f32	 	d2, #0.5				\n\t"	//d2 = 0.5;
+	"vcgt.f32	 	d3, d0, d2				\n\t"	//d3 = (d0 > d2);
+	"vmov.f32		d1, #3.0 				\n\t"	//d5 = 3.0; 	
+	"vshr.u32	 	d3, #31					\n\t"	//d3 = d3 >> 31;
+	"vmov.f32		d16, #1.0 				\n\t"	//d16 = 1.0; 	
+	"vcvt.f32.u32	d3, d3					\n\t"	//d3 = (float) d3;	
+	"vmls.f32		d0, d5, d3[0]			\n\t"	//d0 = d0 - d5 * d3[0]; 	
+	"vmul.f32		d7, d4, d3[0] 			\n\t"	//d7 = d5 * d4; 		
+	"vmls.f32		d16, d1, d3[0] 			\n\t"	//d16 = d16 - d1 * d3; 	
+		
+	//polynomial:
+	"vmul.f32 		d2, d0, d0				\n\t"	//d2 = d0*d0 = {ax^2, ax^2}	
+	"vld1.32 		{d4, d5}, [%0]			\n\t"	//d4 = {p7, p3}, d5 = {p5, p1}
+	"vmul.f32 		d3, d2, d2				\n\t"	//d3 = d2*d2 = {x^4, x^4}		
+	"vmul.f32 		q0, q2, d0[0]			\n\t"	//q0 = q2 * d0[0] = {p7x, p3x, p5x, p1x}
+	"vmla.f32 		d1, d0, d2[0]			\n\t"	//d1 = d1 + d0*d2[0] = {p5x + p7x^3, p1x + p3x^3}		
+	"vmla.f32 		d1, d3, d1[0]			\n\t"	//d1 = d1 + d3*d1[0] = {..., p1x + p3x^3 + p5x^5 + p7x^7}		
+
+	"vmla.f32 		d7, d1, d16				\n\t"	//d7 = d7 + d1*d16		
+
+	"vadd.f32 		d2, d7, d7				\n\t"	//d2 = d7 + d7		
+	"vclt.f32	 	d3, d6, #0				\n\t"	//d3 = (d6 < 0)	
+	"vshr.u32	 	d3, #31					\n\t"	//d3 = d3 >> 31;
+	"vcvt.f32.u32	d3, d3					\n\t"	//d3 = (float) d3	
+	"vmls.f32 		d7, d2, d3[0]			\n\t"	//d7 = d7 - d2 * d3[0];
+
+	"vmov.f32 		s0, s15					\n\t"	//s0 = s3
+
+	:: "r"(__asinf_lut),  "r"(__asinf_pi_2) 
+    : "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7"
+	);
 #endif
 }
 
-float acosf_c(float x)
-{
-	return __asinf_pi_2 - asinf_c(x);
-}
 
-
-float acosf_neon(float x)
+float asinf_neon_sfp(float x)
 {
 #ifdef __MATH_NEON
-	asm volatile (""
-	);
-
+	asm volatile ("vmov.f32 s0, r0 		\n\t");
+	asinf_neon_hfp(x);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
 #else
-	return acosf_c(x);
+	return asinf_c(x);
 #endif
 }
 

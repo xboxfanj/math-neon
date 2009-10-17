@@ -89,21 +89,17 @@ float expf_c(float x)
 	return r.f;
 }
 
-float expf_neon(float x)
+float expf_neon_hfp(float x)
 {
 #ifdef __MATH_NEON
 	asm volatile (
-#if (__MATH_FPABI == 1)
 	"vdup.f32 		d0, d0[0]				\n\t"	//d0 = {x, x}
-#else
-	"vdup.f32 		d0, r0					\n\t"	//d0 = {x, x}
-#endif
 	
 	//Range Reduction:
 	"vld1.32 		d2, [%0]				\n\t"	//d2 = {invrange, range}
 	"vmul.f32 		d6, d0, d2[0]			\n\t"	//d6 = d0 * d2[0] 
-	"vcvt.u32.f32 	d6, d6					\n\t"	//d6 = (int) d6
-	"vcvt.f32.u32 	d1, d6					\n\t"	//d1 = (float) d6
+	"vcvt.s32.f32 	d6, d6					\n\t"	//d6 = (int) d6
+	"vcvt.f32.s32 	d1, d6					\n\t"	//d1 = (float) d6
 	"vmls.f32 		d0, d1, d2[1]			\n\t"	//d0 = d0 - d1 * d2[1]
 		
 	//polynomial:
@@ -118,14 +114,20 @@ float expf_neon(float x)
 	"vshl.i32 		d6, d6, #23				\n\t"	//d6 = d6 << 23		
 	"vadd.i32 		d0, d2, d6				\n\t"	//d0 = d2 + d6		
 
-#if (__MATH_FPABI != 1)
-	"vmov.f32 		r0, s0					\n\t"	//r0 = s0
-#endif
-
 	:: "r"(__expf_rng), "r"(__expf_lut) 
     : "d0", "d1", "q1", "q2", "d6"
 	);
+#endif
+}
+
+float expf_neon_sfp(float x)
+{
+#ifdef __MATH_NEON
+	asm volatile ("vmov.f32 s0, r0 		\n\t");
+	expf_neon_hfp(x);
+	asm volatile ("vmov.f32 r0, s0 		\n\t");
 #else
 	return expf_c(x);
 #endif
-}
+};
+

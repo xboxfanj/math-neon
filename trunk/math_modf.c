@@ -34,24 +34,30 @@ float modf_c(float x, int *i)
 }
 
 
-float modf_neon(float x, int *i)
+float modf_neon_hfp(float x, int *i)
 {
 #ifdef __MATH_NEON
-	asm volatile (
-#if (__MATH_FPABI != 1)
-	"vdup.f32 		d0, r0					\n\t"	//d0 = {x, x}
-#endif
-	
+	asm volatile (	
 	"vcvt.s32.f32	d1, d0					\n\t"	//d1 = (int) d0; 
 	"vcvt.f32.s32	d2, d1					\n\t"	//d2 = (float) d1;
 	"vsub.f32		d0, d0, d2				\n\t"	//d0 = d0 - d2; 
-	
-#if (__MATH_FPABI == 1)
 	"vstr.i32		s2, [r0]				\n\t"	//[r0] = d1[0] 
-#else
+	::: "d0", "d1", "d2"
+	);		
+#endif
+}
+
+
+float modf_neon_sfp(float x, int *i)
+{
+#ifdef __MATH_NEON
+	asm volatile (
+	"vdup.f32 		d0, r0					\n\t"	//d0 = {x, x}	
+	"vcvt.s32.f32	d1, d0					\n\t"	//d1 = (int) d0; 
+	"vcvt.f32.s32	d2, d1					\n\t"	//d2 = (float) d1;
+	"vsub.f32		d0, d0, d2				\n\t"	//d0 = d0 - d2; 
 	"vstr.i32		s2, [r1]				\n\t"	//[r0] = d1[0] 
 	"vmov.f32 		r0, s0					\n\t"	//r0 = d0[0];
-#endif
 	::: "d0", "d1", "d2"
 	);
 		
@@ -59,5 +65,3 @@ float modf_neon(float x, int *i)
 	return modf_c(x, i);
 #endif
 }
-
-

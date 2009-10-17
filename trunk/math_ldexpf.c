@@ -32,22 +32,29 @@ float ldexpf_c(float m, int e)
 	return r.f;
 }
 
-float ldexpf_neon(float m, int e)
+float ldexpf_neon_hfp(float m, int e)
 {
 #ifdef __MATH_NEON
 	float r;
 	asm volatile (
-#if __MATH_FPABI == 1
 	"lsl 			r0, r0, #23				\n\t"	//r0 = r0 << 23	
 	"vdup.i32 		d1, r0					\n\t"	//d1 = {r0, r0}
 	"vadd.i32 		d0, d0, d1				\n\t"	//d0 = d0 + d1
-#else
+	::: "d0", "d1"
+	);
+#endif
+}
+
+float ldexpf_neon_sfp(float m, int e)
+{
+#ifdef __MATH_NEON
+	float r;
+	asm volatile (
 	"lsl 			r1, r1, #23				\n\t"	//r1 = r1 << 23	
 	"vdup.f32 		d0, r0					\n\t"	//d0 = {r0, r0}	
 	"vdup.i32 		d1, r1					\n\t"	//d1 = {r1, r1}
 	"vadd.i32 		d0, d0, d1				\n\t"	//d0 = d0 + d1
 	"vmov.f32 		r0, s0					\n\t"	//r0 = s0
-#endif	
 	::: "d0", "d1"
 	);
 #else
