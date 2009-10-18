@@ -60,7 +60,21 @@ float tanhf_c(float x)
 float tanhf_neon_hfp(float x)
 {
 #ifdef __MATH_NEON
-	
+	asm volatile ("vadd.f32 d0, d0, d0 		\n\t");
+	expf_neon_hfp(x);
+	asm volatile (
+	"vmov.f32 		d2, #1.0 				\n\t"
+	"vsub.f32 		d3, d0, d2 				\n\t"
+	"vadd.f32 		d0, d0, d2 				\n\t"
+
+	"vrecpe.f32		d1, d0					\n\t"	//d1 = ~ 1 / d0; 
+	"vrecps.f32		d2, d1, d0				\n\t"	//d2 = 2.0 - d1 * d0; 
+	"vmul.f32		d1, d1, d2				\n\t"	//d1 = d1 * d2; 
+	"vrecps.f32		d2, d1, d0				\n\t"	//d2 = 2.0 - d1 * d0; 
+	"vmul.f32		d0, d1, d2				\n\t"	//d0 = d1 * d2; 
+	"vmul.f32		d0, d0, d3				\n\t"	//d0 = d0 * d3; 	
+	::: "d0", "d1", "d2", "d3"
+	);	
 #endif
 }
 
@@ -71,7 +85,7 @@ float tanhf_neon_sfp(float x)
 	tanhf_neon_hfp(x);
 	asm volatile ("vmov.f32 r0, s0 		\n\t");
 #else
-	return sinhf_c(x);
+	return tanhf_c(x);
 #endif
 };
 
