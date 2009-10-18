@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "math_neon.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -30,6 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/resource.h>
 #endif
 
+#define randf()	(rand() / (RAND_MAX + 1.0f))
 
 struct	test1_s {
 	const char*	name;
@@ -256,6 +258,140 @@ test_mathfunc2(test2_t *tst)
 
 }
 
+
+void test_matrixfunc()
+{
+	float m2a[4], m2b[4], m2c[4];
+	float m3a[9], m3b[9], m3c[9];
+	float m4a[16], m4b[16], m4c[16];
+	int m2t[3], m3t[3], m4t[3];
+	
+	int i;
+	int testnum = 1000000;
+	struct rusage ru;
+	
+	m2a[0] = 10.0f * randf(); m2a[2] = 10.0f * randf(); 
+	m2a[1] = 10.0f * randf(); m2a[3] = 10.0f * randf();
+	
+	m2b[0] = 6.329; m2b[2] = 2.742; 
+	m2b[1] = 1.453; m2b[3] = 9.386;
+	
+	getrusage(RUSAGE_SELF, &ru);	
+	m2t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matmul2_c(m2a, m2b, m2c);	
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m2t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matmul2_neon(m2a, m2b, m2c);
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m2t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+	memset(m2c, 0, 4*sizeof(float));
+	matmul2_c(m2a, m2b, m2c);	
+	printf("matmul2_c = \n");
+	printf("\t\t\t|%.2f, %.2f|\n", m2c[0], m2c[2]);
+	printf("\t\t\t|%.2f, %.2f|\n", m2c[1], m2c[3]);
+
+	memset(m2c, 0, 4*sizeof(float));
+	matmul2_neon(m2a, m2b, m2c);	
+	printf("matmul2_neon = \n");
+	printf("\t\t\t|%.2f, %.2f|\n", m2c[0], m2c[2]);
+	printf("\t\t\t|%.2f, %.2f|\n", m2c[1], m2c[3]);
+	
+	printf("matmul2: c=%i \t neon=%i \t rate=%.2f \n", m2t[1] - m2t[0], m2t[2] - m2t[1], 
+		(float)(m2t[1] - m2t[0]) / (float)(m2t[2] - m2t[1]));
+
+
+	//MAT3
+	m3a[0] = 10.0f * randf(); m3a[3] = 10.0f * randf(); m3a[6] = 10.0f * randf();
+	m3a[1] = 10.0f * randf(); m3a[4] = 10.0f * randf(); m3a[7] = 10.0f * randf();
+	m3a[2] = 10.0f * randf(); m3a[5] = 10.0f * randf(); m3a[8] = 10.0f * randf();
+	
+	m3b[0] = 10.0f * randf(); m3b[3] = 10.0f * randf(); m3b[6] = 10.0f * randf();
+	m3b[1] = 10.0f * randf(); m3b[4] = 10.0f * randf(); m3b[7] = 10.0f * randf();
+	m3b[2] = 10.0f * randf(); m3b[5] = 10.0f * randf(); m3b[8] = 10.0f * randf();
+	
+	getrusage(RUSAGE_SELF, &ru);	
+	m3t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matmul3_c(m3a, m3b, m3c);	
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m3t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matmul3_neon(m3a, m3b, m3c);
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m3t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+	memset(m3c, 0, 9*sizeof(float));
+	matmul3_c(m3a, m3b, m3c);	
+	printf("matmul3_c =\n");
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[0], m3c[3], m3c[6]);
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[1], m3c[4], m3c[7]);
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[2], m3c[5], m3c[8]);
+	
+	memset(m3c, 0, 9*sizeof(float));
+	matmul3_neon(m3a, m3b, m3c);	
+	printf("matmul3_neon =\n");
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[0], m3c[3], m3c[6]);
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[1], m3c[4], m3c[7]);
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[2], m3c[5], m3c[8]);
+	
+	printf("matmul3: c=%i \t neon=%i \t rate=%.2f \n", m3t[1] - m3t[0], m3t[2] - m3t[1], 
+		(float)(m3t[1] - m3t[0]) / (float)(m3t[2] - m3t[1]));
+
+
+	//MAT4
+	m4a[0] = 10.0f * randf(); m4a[4] = 10.0f * randf(); m4a[8] = 10.0f * randf();  m4a[12] = 10.0f * randf();
+	m4a[1] = 10.0f * randf(); m4a[5] = 10.0f * randf(); m4a[9] = 10.0f * randf();  m4a[13] = 10.0f * randf();
+	m4a[2] = 10.0f * randf(); m4a[6] = 10.0f * randf(); m4a[10] = 10.0f * randf();  m4a[14] = 10.0f * randf();
+	m4a[3] = 10.0f * randf(); m4a[7] = 10.0f * randf(); m4a[11] = 10.0f * randf();  m4a[15] = 10.0f * randf();
+	
+	m4b[0] = 10.0f * randf(); m4b[4] = 10.0f * randf(); m4b[8] = 10.0f * randf();  m4b[12] = 10.0f * randf();
+	m4b[1] = 10.0f * randf(); m4b[5] = 10.0f * randf(); m4b[9] = 10.0f * randf();  m4b[13] = 10.0f * randf();
+	m4b[2] = 10.0f * randf(); m4b[6] = 10.0f * randf(); m4b[10] = 10.0f * randf();  m4b[14] = 10.0f * randf();
+	m4b[3] = 10.0f * randf(); m4b[7] = 10.0f * randf(); m4b[11] = 10.0f * randf();  m4b[15] = 10.0f * randf();
+		
+	getrusage(RUSAGE_SELF, &ru);	
+	m4t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matmul4_c(m4a, m4b, m4c);	
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m4t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matmul4_neon(m4a, m4b, m4c);
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m4t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+	memset(m4c, 0, 16*sizeof(float));
+	matmul4_c(m4a, m4b, m4c);	
+	printf("matmul4_c =\n");
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[0], m4c[4], m4c[8], m4c[12]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[1], m4c[5], m4c[9], m4c[13]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[2], m4c[6], m4c[10], m4c[14]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[3], m4c[7], m4c[11], m4c[15]);
+	
+	memset(m4c, 0, 16*sizeof(float));
+	matmul4_neon(m4a, m4b, m4c);	
+	printf("matmul4_neon =\n");
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[0], m4c[4], m4c[8], m4c[12]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[1], m4c[5], m4c[9], m4c[13]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[2], m4c[6], m4c[10], m4c[14]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[3], m4c[7], m4c[11], m4c[15]);
+	
+	printf("matmul4: c=%i \t neon=%i \t rate=%.2f \n", m4t[1] - m4t[0], m4t[2] - m4t[1], 
+		(float)(m4t[1] - m4t[0]) / (float)(m4t[2] - m4t[1]));
+
+}
+
+
+
 int main(int argc, char** argv)
 {
 
@@ -268,8 +404,16 @@ int main(int argc, char** argv)
 	}
 
 #if 1
-
 	//test single argument functions:
+	printf("------------------------------------------------------------------------------------------------------\n");	
+	printf("MATRIX FUNCTION TESTS \n");	
+	printf("------------------------------------------------------------------------------------------------------\n");	
+	
+	test_matrixfunc();
+
+	printf("------------------------------------------------------------------------------------------------------\n");	
+	printf("CMATH FUNCTION TESTS \n");	
+	printf("------------------------------------------------------------------------------------------------------\n");	
 	printf("Function\tRange\t\tNumber\tABS Max Error\tREL Max Error\tRMS Error\tTime\tRate\n");	
 	printf("------------------------------------------------------------------------------------------------------\n");	
 	for(i = 0; i < 51; i++){
@@ -301,16 +445,16 @@ int main(int argc, char** argv)
 		printf("x%.2f\t", (float)test2[ii].time / test2[i].time);
 		printf("\n");
 	}
-	printf("------------------------------------------------------------------------------------------------------\n");	
-
+	
 #else
+
 
 	float x = 0;
 	for(x = -M_PI_2; x < M_PI_2; x+= 0.01)
 	{
-		printf("x=%.2f\t in=%.2f\t c=%.2f\t neon=%.2f \n", x, asinf(x), asinf_c(x), asinf_neon(x));
+		printf("x=%.2f\t in=%.2f\t c=%.2f\t neon=%.2f \n", x, sinhf(x), sinhf_c(x), sinhf_neon(x));
 	}
-	
+
 #endif
 	
 	return 0;
