@@ -126,8 +126,6 @@ float asinf_neon_hfp(float x)
 	"vrecps.f32		d2, d1, d5				\n\t"	//d2 = 2.0 - d1 * d5; 
 	"vmul.f32		d5, d1, d2				\n\t"	//d5 = d1 * d2; 
 	
-
-
 	//if |x| > 0.5 -> ax = sqrt((1-ax)/2), r = pi/2
 	"vsub.f32		d5, d0, d5				\n\t"	//d5 = d0 - d5; 
 	"vmov.f32	 	d2, #0.5				\n\t"	//d2 = 0.5;
