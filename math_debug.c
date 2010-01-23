@@ -18,6 +18,7 @@ License along with this library; if not, write to the Free
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+
 #include "math_neon.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -32,6 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #endif
 
 #define randf()	(rand() / (RAND_MAX + 1.0f))
+
+
 
 struct	test1_s {
 	const char*	name;
@@ -390,10 +393,13 @@ void test_matrixfunc()
 
 }
 
-
+int x, y, z;
 
 int main(int argc, char** argv)
 {
+
+	z = x / y;
+	
 
 	int i, ii;
 	if (argc > 1 && strcmp(argv[1], "-norunfast") == 0){
@@ -403,7 +409,7 @@ int main(int argc, char** argv)
 		enable_runfast();
 	}
 
-#if 1
+#if 0
 	//test single argument functions:
 	printf("------------------------------------------------------------------------------------------------------\n");	
 	printf("MATRIX FUNCTION TESTS \n");	
