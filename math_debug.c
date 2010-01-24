@@ -261,145 +261,395 @@ test_mathfunc2(test2_t *tst)
 
 }
 
+void test_vectorfunc()
+{
+	float v0[4], v1[4], d[4];
+	
+	for(int i=0;i<4;i++)
+	{
+		v0[i] = 10*randf() - 5;
+		v1[i] = 10*randf() - 5;
+		d[i] = 10*randf() - 5;		
+	}
+	
+	int testnum = 5000000;
+	struct rusage ru;
+	int v2t[3], v3t[3], v4t[3];
+	float r;
+	
+	printf("\n");
+	
+	//dot 2
+	getrusage(RUSAGE_SELF, &ru);	
+	v2t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		r = dot2_c(v0, v1);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v2t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		r = dot2_neon(v0, v1);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v2t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+	r = dot2_c(v0, v1);
+	printf("dot2_c = %f\n", r);
+	r = dot2_neon(v0, v1);
+	printf("dot2_neon = %f\n", r);
+	
+	printf("dot2: c=%i \t neon=%i \t rate=%.2f \n", v2t[1] - v2t[0], v2t[2] - v2t[1], 
+	(float)(v2t[1] - v2t[0]) / (float)(v2t[2] - v2t[1]));
+
+	//normalize 2
+	getrusage(RUSAGE_SELF, &ru);	
+	v2t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		normalize2_c(v0, d);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v2t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		normalize2_neon(v0, d);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v2t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+
+	normalize2_c(v0, d);
+	printf("normalize2_c = [%.2f, %.2f]\n", d[0], d[1]);
+	normalize2_neon(v0, d);
+	printf("normalize2_neon = [%.2f, %.2f]\n", d[0], d[1]);
+	
+	printf("normalize2: c=%i \t neon=%i \t rate=%.2f \n", v2t[1] - v2t[0], v2t[2] - v2t[1], 
+	(float)(v2t[1] - v2t[0]) / (float)(v2t[2] - v2t[1]));
+	printf("\n");
+
+	
+	//dot 3
+	getrusage(RUSAGE_SELF, &ru);	
+	v3t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		r = dot3_c(v0, v1);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v3t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		r = dot3_neon(v0, v1);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v3t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+	r = dot3_c(v0, v1);
+	printf("dot3_c = %f\n", r);
+	r = dot3_neon(v0, v1);
+	printf("dot3_neon = %f\n", r);
+	
+	printf("dot3: c=%i \t neon=%i \t rate=%.2f \n", v3t[1] - v3t[0], v3t[2] - v3t[1], 
+	(float)(v3t[1] - v3t[0]) / (float)(v3t[2] - v3t[1]));
+
+	//normalize 3
+	getrusage(RUSAGE_SELF, &ru);	
+	v3t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		normalize3_c(v0, d);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v3t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		normalize3_neon(v0, d);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v3t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+
+	normalize3_c(v0, d);
+	printf("normalize3_c = [%.2f, %.2f, %.2f]\n", d[0], d[1], d[2]);
+	normalize3_neon(v0, d);
+	printf("normalize3_neon = [%.2f, %.2f, %.2f]\n", d[0], d[1], d[2]);
+	
+	printf("normalize3: c=%i \t neon=%i \t rate=%.2f \n", v3t[1] - v3t[0], v3t[2] - v3t[1], 
+	(float)(v3t[1] - v3t[0]) / (float)(v3t[2] - v3t[1]));
+
+	//cross 3
+	getrusage(RUSAGE_SELF, &ru);	
+	v3t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		cross3_c(v0, v1, d);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v3t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		cross3_neon(v0, v1, d);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v3t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+
+	cross3_c(v0, v1, d);
+	printf("cross3_c = [%.2f, %.2f, %.2f]\n", d[0], d[1], d[2]);
+	cross3_neon(v0, v1, d);
+	printf("cross3_neon = [%.2f, %.2f, %.2f]\n", d[0], d[1], d[2]);
+	
+	printf("cross3: c=%i \t neon=%i \t rate=%.2f \n", v3t[1] - v3t[0], v3t[2] - v3t[1], 
+	(float)(v3t[1] - v3t[0]) / (float)(v3t[2] - v3t[1]));
+	printf("\n");
+
+
+	//dot 4
+	getrusage(RUSAGE_SELF, &ru);	
+	v4t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		r = dot4_c(v0, v1);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v4t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		r = dot4_neon(v0, v1);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v4t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+	r = dot4_c(v0, v1);
+	printf("dot4_c = %f\n", r);
+	r = dot4_neon(v0, v1);
+	printf("dot4_neon = %f\n", r);
+	
+	printf("dot4: c=%i \t neon=%i \t rate=%.2f \n", v4t[1] - v4t[0], v4t[2] - v4t[1], 
+	(float)(v4t[1] - v4t[0]) / (float)(v4t[2] - v4t[1]));
+	
+	//normalize 4
+	getrusage(RUSAGE_SELF, &ru);	
+	v4t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		normalize4_c(v0, d);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v4t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(int i=0;i < testnum; i++)
+	{
+		normalize4_neon(v0, d);
+	};
+	getrusage(RUSAGE_SELF, &ru);	
+	v4t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+
+	normalize4_c(v0, d);
+	printf("normalize4_c = [%.2f, %.2f, %.2f, %.2f]\n", d[0], d[1], d[2], d[3]);
+	normalize4_neon(v0, d);
+	printf("normalize4_neon = [%.2f, %.2f, %.2f, %.2f]\n", d[0], d[1], d[2], d[3]);
+	
+	printf("normalize4: c=%i \t neon=%i \t rate=%.2f \n", v4t[1] - v4t[0], v4t[2] - v4t[1], 
+	(float)(v4t[1] - v4t[0]) / (float)(v4t[2] - v4t[1]));
+	printf("\n");
+
+
+}
+
+
 
 void test_matrixfunc()
 {
-	float m2a[4], m2b[4], m2c[4];
-	float m3a[9], m3b[9], m3c[9];
-	float m4a[16], m4b[16], m4c[16];
+	float m0[16], m1[16], m2[16];
 	int m2t[3], m3t[3], m4t[3];
 	
 	int i;
 	int testnum = 1000000;
 	struct rusage ru;
 	
-	m2a[0] = 10.0f * randf(); m2a[2] = 10.0f * randf(); 
-	m2a[1] = 10.0f * randf(); m2a[3] = 10.0f * randf();
-	
-	m2b[0] = 6.329; m2b[2] = 2.742; 
-	m2b[1] = 1.453; m2b[3] = 9.386;
-	
+	for(int i=0;i<16;i++)
+	{
+		m0[i] = 10.0f * randf() - 5.0f; 
+		m1[i] = 10.0f * randf() - 5.0f; 
+		m2[i] = 10.0f * randf() - 5.0f; 
+	}
+
+
+	//matmul2 
 	getrusage(RUSAGE_SELF, &ru);	
 	m2t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
 	for(i = 0; i < testnum; i++){
-		matmul2_c(m2a, m2b, m2c);	
+		matmul2_c(m0, m1, m2);	
 	}
 	getrusage(RUSAGE_SELF, &ru);	
 	m2t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
 	for(i = 0; i < testnum; i++){
-		matmul2_neon(m2a, m2b, m2c);
+		matmul2_neon(m0, m1, m2);
 	}
 	getrusage(RUSAGE_SELF, &ru);	
 	m2t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
 
-	memset(m2c, 0, 4*sizeof(float));
-	matmul2_c(m2a, m2b, m2c);	
+	matmul2_c(m0, m1, m2);	
 	printf("matmul2_c = \n");
-	printf("\t\t\t|%.2f, %.2f|\n", m2c[0], m2c[2]);
-	printf("\t\t\t|%.2f, %.2f|\n", m2c[1], m2c[3]);
+	printf("\t\t\t|%.2f, %.2f|\n", m2[0], m2[2]);
+	printf("\t\t\t|%.2f, %.2f|\n", m2[1], m2[3]);
 
-	memset(m2c, 0, 4*sizeof(float));
-	matmul2_neon(m2a, m2b, m2c);	
+	matmul2_neon(m0, m1, m2);	
 	printf("matmul2_neon = \n");
-	printf("\t\t\t|%.2f, %.2f|\n", m2c[0], m2c[2]);
-	printf("\t\t\t|%.2f, %.2f|\n", m2c[1], m2c[3]);
+	printf("\t\t\t|%.2f, %.2f|\n", m2[0], m2[2]);
+	printf("\t\t\t|%.2f, %.2f|\n", m2[1], m2[3]);
 	
 	printf("matmul2: c=%i \t neon=%i \t rate=%.2f \n", m2t[1] - m2t[0], m2t[2] - m2t[1], 
 		(float)(m2t[1] - m2t[0]) / (float)(m2t[2] - m2t[1]));
 
 
+	//matvec2 
+	getrusage(RUSAGE_SELF, &ru);	
+	m2t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matvec2_c(m0, m1, m2);	
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m2t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matvec2_neon(m0, m1, m2);
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m2t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+	memset(m2, 0, 4*sizeof(float));
+	matvec2_c(m0, m1, m2);	
+	printf("matvec2_c = |%.2f, %.2f|\n", m2[0], m2[1]);
+	
+	memset(m2, 0, 4*sizeof(float));
+	matvec2_neon(m0, m1, m2);	
+	printf("matvec2_neon = |%.2f, %.2f|\n", m2[0], m2[1]);
+
+	printf("matvec2: c=%i \t neon=%i \t rate=%.2f \n", m2t[1] - m2t[0], m2t[2] - m2t[1], 
+		(float)(m2t[1] - m2t[0]) / (float)(m2t[2] - m2t[1]));
+
 	//MAT3
-	m3a[0] = 10.0f * randf(); m3a[3] = 10.0f * randf(); m3a[6] = 10.0f * randf();
-	m3a[1] = 10.0f * randf(); m3a[4] = 10.0f * randf(); m3a[7] = 10.0f * randf();
-	m3a[2] = 10.0f * randf(); m3a[5] = 10.0f * randf(); m3a[8] = 10.0f * randf();
-	
-	m3b[0] = 10.0f * randf(); m3b[3] = 10.0f * randf(); m3b[6] = 10.0f * randf();
-	m3b[1] = 10.0f * randf(); m3b[4] = 10.0f * randf(); m3b[7] = 10.0f * randf();
-	m3b[2] = 10.0f * randf(); m3b[5] = 10.0f * randf(); m3b[8] = 10.0f * randf();
-	
 	getrusage(RUSAGE_SELF, &ru);	
 	m3t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
 	for(i = 0; i < testnum; i++){
-		matmul3_c(m3a, m3b, m3c);	
+		matmul3_c(m0, m1, m2);	
 	}
 	getrusage(RUSAGE_SELF, &ru);	
 	m3t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
 	for(i = 0; i < testnum; i++){
-		matmul3_neon(m3a, m3b, m3c);
+		matmul3_neon(m0, m1, m2);
 	}
 	getrusage(RUSAGE_SELF, &ru);	
 	m3t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
 
-	memset(m3c, 0, 9*sizeof(float));
-	matmul3_c(m3a, m3b, m3c);	
+	memset(m2, 0, 9*sizeof(float));
+	matmul3_c(m0, m1, m2);	
 	printf("matmul3_c =\n");
-	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[0], m3c[3], m3c[6]);
-	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[1], m3c[4], m3c[7]);
-	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[2], m3c[5], m3c[8]);
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m2[0], m2[3], m2[6]);
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m2[1], m2[4], m2[7]);
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m2[2], m2[5], m2[8]);
 	
-	memset(m3c, 0, 9*sizeof(float));
-	matmul3_neon(m3a, m3b, m3c);	
+	memset(m2, 0, 9*sizeof(float));
+	matmul3_neon(m0, m1, m2);	
 	printf("matmul3_neon =\n");
-	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[0], m3c[3], m3c[6]);
-	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[1], m3c[4], m3c[7]);
-	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m3c[2], m3c[5], m3c[8]);
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m2[0], m2[3], m2[6]);
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m2[1], m2[4], m2[7]);
+	printf("\t\t\t|%.2f, %.2f, %.2f|\n", m2[2], m2[5], m2[8]);
 	
 	printf("matmul3: c=%i \t neon=%i \t rate=%.2f \n", m3t[1] - m3t[0], m3t[2] - m3t[1], 
 		(float)(m3t[1] - m3t[0]) / (float)(m3t[2] - m3t[1]));
 
+	//matvec3
+	getrusage(RUSAGE_SELF, &ru);	
+	m3t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matvec3_c(m0, m1, m2);	
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m3t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matvec3_neon(m0, m1, m2);
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m3t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+	memset(m2, 0, 4*sizeof(float));
+	matvec3_c(m0, m1, m2);	
+	printf("matvec3_c = |%.2f, %.2f, %.2f|\n", m2[0], m2[1], m2[2]);
+
+	memset(m2, 0, 4*sizeof(float));
+	matvec3_neon(m0, m1, m2);	
+	printf("matvec3_neon = |%.2f, %.2f, %.2f|\n", m2[0], m2[1], m2[2]);
+	
+	printf("matvec3: c=%i \t neon=%i \t rate=%.2f \n", m2t[1] - m2t[0], m2t[2] - m2t[1], 
+		(float)(m2t[1] - m2t[0]) / (float)(m2t[2] - m2t[1]));
 
 	//MAT4
-	m4a[0] = 10.0f * randf(); m4a[4] = 10.0f * randf(); m4a[8] = 10.0f * randf();  m4a[12] = 10.0f * randf();
-	m4a[1] = 10.0f * randf(); m4a[5] = 10.0f * randf(); m4a[9] = 10.0f * randf();  m4a[13] = 10.0f * randf();
-	m4a[2] = 10.0f * randf(); m4a[6] = 10.0f * randf(); m4a[10] = 10.0f * randf();  m4a[14] = 10.0f * randf();
-	m4a[3] = 10.0f * randf(); m4a[7] = 10.0f * randf(); m4a[11] = 10.0f * randf();  m4a[15] = 10.0f * randf();
-	
-	m4b[0] = 10.0f * randf(); m4b[4] = 10.0f * randf(); m4b[8] = 10.0f * randf();  m4b[12] = 10.0f * randf();
-	m4b[1] = 10.0f * randf(); m4b[5] = 10.0f * randf(); m4b[9] = 10.0f * randf();  m4b[13] = 10.0f * randf();
-	m4b[2] = 10.0f * randf(); m4b[6] = 10.0f * randf(); m4b[10] = 10.0f * randf();  m4b[14] = 10.0f * randf();
-	m4b[3] = 10.0f * randf(); m4b[7] = 10.0f * randf(); m4b[11] = 10.0f * randf();  m4b[15] = 10.0f * randf();
-		
 	getrusage(RUSAGE_SELF, &ru);	
 	m4t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
 	for(i = 0; i < testnum; i++){
-		matmul4_c(m4a, m4b, m4c);	
+		matmul4_c(m0, m1, m2);	
 	}
 	getrusage(RUSAGE_SELF, &ru);	
 	m4t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
 	for(i = 0; i < testnum; i++){
-		matmul4_neon(m4a, m4b, m4c);
+		matmul4_neon(m0, m1, m2);
 	}
 	getrusage(RUSAGE_SELF, &ru);	
 	m4t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
 
-	memset(m4c, 0, 16*sizeof(float));
-	matmul4_c(m4a, m4b, m4c);	
+	memset(m2, 0, 16*sizeof(float));
+	matmul4_c(m0, m1, m2);	
 	printf("matmul4_c =\n");
-	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[0], m4c[4], m4c[8], m4c[12]);
-	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[1], m4c[5], m4c[9], m4c[13]);
-	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[2], m4c[6], m4c[10], m4c[14]);
-	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[3], m4c[7], m4c[11], m4c[15]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m2[0], m2[4], m2[8], m2[12]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m2[1], m2[5], m2[9], m2[13]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m2[2], m2[6], m2[10], m2[14]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m2[3], m2[7], m2[11], m2[15]);
 	
-	memset(m4c, 0, 16*sizeof(float));
-	matmul4_neon(m4a, m4b, m4c);	
+	memset(m2, 0, 16*sizeof(float));
+	matmul4_neon(m0, m1, m2);	
 	printf("matmul4_neon =\n");
-	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[0], m4c[4], m4c[8], m4c[12]);
-	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[1], m4c[5], m4c[9], m4c[13]);
-	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[2], m4c[6], m4c[10], m4c[14]);
-	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m4c[3], m4c[7], m4c[11], m4c[15]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m2[0], m2[4], m2[8], m2[12]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m2[1], m2[5], m2[9], m2[13]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m2[2], m2[6], m2[10], m2[14]);
+	printf("\t\t\t|%.2f, %.2f, %.2f, %.2f|\n", m2[3], m2[7], m2[11], m2[15]);
 	
 	printf("matmul4: c=%i \t neon=%i \t rate=%.2f \n", m4t[1] - m4t[0], m4t[2] - m4t[1], 
 		(float)(m4t[1] - m4t[0]) / (float)(m4t[2] - m4t[1]));
 
+	//matvec4
+	getrusage(RUSAGE_SELF, &ru);	
+	m4t[0] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matvec4_c(m0, m1, m2);	
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m4t[1] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+	for(i = 0; i < testnum; i++){
+		matvec4_neon(m0, m1, m2);
+	}
+	getrusage(RUSAGE_SELF, &ru);	
+	m4t[2] = ru.ru_utime.tv_sec * 1000000 + ru.ru_utime.tv_usec;
+
+	memset(m2, 0, 4*sizeof(float));
+	matvec4_c(m0, m1, m2);	
+	printf("matvec4_c = |%.2f, %.2f, %.2f, %f|\n", m2[0], m2[1], m2[2], m2[3]);
+
+	memset(m2, 0, 4*sizeof(float));
+	matvec4_neon(m0, m1, m2);	
+	printf("matvec4_neon = |%.2f, %.2f, %.2f, %f|\n", m2[0], m2[1], m2[2], m2[3]);
+	
+	printf("matvec4: c=%i \t neon=%i \t rate=%.2f \n", m2t[1] - m2t[0], m2t[2] - m2t[1], 
+		(float)(m2t[1] - m2t[0]) / (float)(m2t[2] - m2t[1]));
+
+
 }
 
-int x, y, z;
-
 int main(int argc, char** argv)
-{
-
-	z = x / y;
-	
+{	
 
 	int i, ii;
 	if (argc > 1 && strcmp(argv[1], "-norunfast") == 0){
@@ -409,13 +659,16 @@ int main(int argc, char** argv)
 		enable_runfast();
 	}
 
-#if 0
+	srand(time(NULL));
+
+#if 1
 	//test single argument functions:
 	printf("------------------------------------------------------------------------------------------------------\n");	
 	printf("MATRIX FUNCTION TESTS \n");	
 	printf("------------------------------------------------------------------------------------------------------\n");	
 	
 	test_matrixfunc();
+	test_vectorfunc();
 
 	printf("------------------------------------------------------------------------------------------------------\n");	
 	printf("CMATH FUNCTION TESTS \n");	

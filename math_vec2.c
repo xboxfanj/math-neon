@@ -105,7 +105,7 @@ normalize2_neon(float v[2], float d[2])
 	"vst1.32 		d4, [%1]				\n\t"	//
 	
 	:: "r"(v), "r"(d) 
-    : "d0", "d1", "d2", "d3", "d4"
+    : "d0", "d1", "d2", "d3", "d4", "memory"
 	);	
 #else
 	normalize2_c(v, d);

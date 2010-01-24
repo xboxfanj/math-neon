@@ -160,7 +160,7 @@ float powf_neon_hfp(float x, float n)
 
 
 	:: "r"(__powf_rng), "r"(__powf_lut) 
-    : "d0", "d1", "q1", "q2", "d6", "d7"
+    : "d0", "d1", "d2","d3", "d4", "d5", "d6", "d7"
 	);
 #endif
 }
