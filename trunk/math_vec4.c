@@ -88,7 +88,7 @@ normalize4_neon(float v[4], float d[4])
 	"vst1.32 		{d4, d5}, [%1]			\n\t"	//d2={x0,y0}, d3={z0, w0}
 	
 	:: "r"(v), "r"(d) 
-    : "d0", "d1", "d2", "d3", "d4", "d5"
+    : "d0", "d1", "d2", "d3", "d4", "d5", "memory"
 	);	
 #else
 	normalize4_c(v, d);

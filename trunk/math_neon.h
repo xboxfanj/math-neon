@@ -105,6 +105,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define modf_neon		modf_neon_sfp
 #define sqrtf_neon		sqrtf_neon_sfp
 #define invsqrtf_neon	invsqrtf_neon_sfp
+
+#define dot2_neon		dot2_neon_sfp
+#define dot3_neon		dot3_neon_sfp
+#define dot4_neon		dot4_neon_sfp
 #endif
 
 /* 
@@ -113,6 +117,24 @@ function:	enable_runfast
 			ARM Cortex A8.  	
 */
 void		enable_runfast();
+
+
+float dot2_c(float v0[2], float v1[2]);
+float dot2_neon(float v0[2], float v1[2]);
+float dot3_c(float v0[3], float v1[3]);
+float dot3_neon(float v0[3], float v1[3]);
+float dot4_c(float v0[4], float v1[4]);
+float dot4_neon(float v0[4], float v1[4]);
+
+void cross3_c(float v0[3], float v1[3], float d[3]);
+void cross3_neon(float v0[3], float v1[3], float d[3]);
+
+void normalize2_c(float v[2], float d[2]);
+void normalize2_neon(float v[2], float d[2]);
+void normalize3_c(float v[3], float d[3]);
+void normalize3_neon(float v[3], float d[3]);
+void normalize4_c(float v[4], float d[4]);
+void normalize4_neon(float v[4], float d[4]);
 
 /* 
 function:	matmul2

@@ -83,7 +83,7 @@ dot3_neon_hfp(float v0[3], float v1[3])
 	"vpadd.f32 		d0, d0, d0			\n\t"	//d0 = d[0] + d[1]
 	"vmla.f32 		d0, d3, d5			\n\t"	//d0 = d0 + d3*d5 
 	:: "r"(v0), "r"(v1) 
-    : 
+    : "d0","d1","d2","d3","d4","d5"
 	);	
 #endif
 }
@@ -100,35 +100,32 @@ dot3_neon_sfp(float v0[3], float v1[3])
 };
 
 
-float 
-cross3_neon(float v0[3], float v1[3], float d[3])
+void cross3_neon(float v0[3], float v1[3], float d[3])
 {
 #ifdef __MATH_NEON
 	asm volatile (
-	"flds 			s4, [%0]			\n\t"	//d2[0]={x0}
-	"vld1.32 		{d0}, [%0, #4]		\n\t"	//d0={y0,z0}
-	"vmov.f32 		s3, s4		 		\n\t"	//d1[1]={x0}
+	"flds 			s3, [%0]			\n\t"	//d1[1]={x0}
+	"add 			%0, %0, #4			\n\t"	//
+	"vld1.32 		{d0}, [%0]			\n\t"	//d0={y0,z0}
 	"vmov.f32 		s2, s1		 		\n\t"	//d1[0]={z0}
-	"vmov.f32 		s5, s0		 		\n\t"	//d2[1]={y0}
 
-	"flds 			s6, [%1, #8]		\n\t"	//d3[0]={z1}
-	"flds 			s8, [%1]			\n\t"	//d4[0]={x1}
-	"flds 			s10, [%1, #4]		\n\t"	//d5[0]={y1}
-	"fnegs	 		s11, s6				\n\t"	//d5[1]=-d3[0]
-	"fnegs 			s9, s8				\n\t"	//d4[1]=-d4[0]
-	"fnegs 			s7, s10				\n\t"	//d3[1]=-d5[0]
+	"flds 			s5, [%1]			\n\t"	//d2[1]={x1}
+	"add 			%1, %1, #4			\n\t"	//
+	"vld1.32 		{d3}, [%1]			\n\t"	//d3={y1,z1}
+	"vmov.f32 		s4, s7				\n\t"	//d2[0]=d3[1]
 	
-	"vmul.f32 		d16, d0, d3			\n\t"	//d16=d0*d3
-	"vmul.f32 		d17, d1, d4			\n\t"	//d17=d1*d4
-	"vmul.f32 		d18, d2, d5			\n\t"	//d18=d2*d5
-	"vpadd.f32 		d0, d16, d17		\n\t"	//d0[0]=d16[0]+d16[1], d0[1]=d17[0]+d17[1], 
-	"vpadd.f32 		d1, d18				\n\t"	//d2[0]=d18[0]+d18[1]
+	"vmul.f32 		d4, d0, d2			\n\t"	//d4=d0*d2
+	"vmls.f32 		d4, d1, d3			\n\t"	//d4-=d1*d3
 	
-	"vst1.32 		d0, [%2]			\n\t"	//
-	"fsts 			s2, [%2, #8]		\n\t"	//
+	"vmul.f32 		d5, d3, d1[1]		\n\t"	//d5=d3*d1[1]
+	"vmls.f32 		d5, d0, d2[1]		\n\t"	//d5-=d0*d2[1]
 	
-	:: "r"(v0), "r"(v1), "r"(d)
-    : 
+	"vst1.32 		d4, [%2]			\n\t"	//
+	"add 			%2, %2, #8			\n\t"	//
+	"fsts 			s10, [%2]			\n\t"	//
+	
+	: "+r"(v0), "+r"(v1), "+r"(d):
+    : "d0", "d1", "d2", "d3", "d4", "d5", "memory"
 	);	
 #else
 	cross3_c(v0,v1,d);
@@ -161,7 +158,7 @@ normalize3_neon(float v[3], float d[3])
 	"fsts 			s10, [%1, #8]			\n\t"	//
 	
 	:: "r"(v), "r"(d) 
-    : "d0", "d1", "d2", "d3", "d4", "d5"
+    : "d0", "d1", "d2", "d3", "d4", "d5", "memory"
 	);	
 #else
 	normalize3_c(v, d);

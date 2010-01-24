@@ -54,7 +54,7 @@ matmul2_neon(float m0[4], float m1[4], float d[4])
 	
 	"vst1.32 		{d4, d5}, [%2] 			\n\t"	//Q4 = m+12	
 	:: "r"(m0), "r"(m1), "r"(d) 
-    : "q0", "q1", "q2"
+    : "q0", "q1", "q2", "memory"
 	);	
 #else
 	matmul2_c(m0, m1, d);
@@ -83,7 +83,7 @@ matvec2_neon(float m[4], float v[2], float d[2])
 	
 	"vst1.32 		d3, [%2] 				\n\t"	//Q4 = m+12	
 	:: "r"(m), "r"(v), "r"(d) 
-    : "d0", "d1", "d2","d3"
+    : "d0", "d1", "d2","d3", "memory"
 	);	
 #else
 	matvec2_c(m, v, d);
