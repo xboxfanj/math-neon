@@ -21,11 +21,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "math_neon.h"
 
+
+#ifdef __MATH_NEON
 #include "arm_neon.h" 
+#endif
 
 //vec4 scalar product
-float 
-dot4_c(float v0[4], float v1[4])
+float dot4_c(float v0[4], float v1[4])
 {
 	float r;
 	r = v0[0]*v1[0];
@@ -35,8 +37,7 @@ dot4_c(float v0[4], float v1[4])
 	return r;
 }
 
-void 
-normalize4_c(float v[4], float d[4])
+void normalize4_c(float v[4], float d[4])
 {
 	float b, c, x;
 	union {
@@ -65,8 +66,7 @@ normalize4_c(float v[4], float d[4])
 	d[3] = v[3]*a.f;
 }
 
-void 
-normalize4_neon(float v[4], float d[4])
+void normalize4_neon(float v[4], float d[4])
 {
 #ifdef __MATH_NEON
 	asm volatile (
@@ -97,8 +97,7 @@ normalize4_neon(float v[4], float d[4])
 }
 
 
-float 
-dot4_neon_hfp(float v0[4], float v1[4])
+float dot4_neon_hfp(float v0[4], float v1[4])
 {
 #ifdef __MATH_NEON
 	asm volatile (
@@ -113,8 +112,8 @@ dot4_neon_hfp(float v0[4], float v1[4])
 }
 
 
-float32_t 
-dot4_neon(float32x4_t v0, float32x4_t v1)
+#ifdef __MATH_NEON
+float32_t dot4_neon(float32x4_t v0, float32x4_t v1)
 {	
 	float32x2_t a, b, c, d, r;
 	a = vget_high_f32(v0);
@@ -127,9 +126,9 @@ dot4_neon(float32x4_t v0, float32x4_t v1)
 	r = vpadd_f32(r, r);
 	return vget_lane_f32(r, 0);
 }
+#endif
 
-float 
-dot4_neon_sfp(float v0[4], float v1[4])
+float dot4_neon_sfp(float v0[4], float v1[4])
 {
 #ifdef __MATH_NEON
 	dot4_neon_hfp(v0, v1);
