@@ -1,7 +1,7 @@
 
 Library: 	MATH-NEON
-By:			Lachlan Tychsen - Smith AKA Adventus
-Licence:	GPLv3
+By:			Lachlan Tychsen-Smith
+Licence:	MIT (expat)
 =======================================================================================
 This project implements the cmath functions and some optimised matrix functions 
 with the aim of increasing the floating point performance of ARM Cortex A-8
@@ -31,6 +31,5 @@ Notes:
 	  
 Contact:
 =======================================================================================
-Name: 	Lachlan Tychsen - Smith 
+Name: 	Lachlan Tychsen-Smith 
 Email: 	lachlan.ts@gmail.com
-Forum:	I also regularly check my GP32X.com forum messages, so you can PM "Adventus".
